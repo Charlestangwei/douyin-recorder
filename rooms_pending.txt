@@ -1,4 +1,4 @@
 # Pending rooms (high traffic, threshold>=10000)
 22942047810 = 三哥 在越南 | online=2907 | total_user=293815 | 累计>=100000 | keyword=越南
 4133303577 = Saiwen | online=2693 | total_user=126204 | 累计>=100000 | keyword=美国
-44288600962 = 泰国金枕榴莲【硕宸鲜仓】 | online=1252 | total_user=635409 | 累计>=100000 | keyword=泰国
+44288600962 = 泰国金枕榴莲【硕宸鲜仓】 | online=1277 | total_user=639832 | 累计>=100000 | keyword=泰国
