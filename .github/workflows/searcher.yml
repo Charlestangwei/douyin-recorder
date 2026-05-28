@@ -1,4 +1,4 @@
-name: 24h searcher
+name: searcher
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
 jobs:
   search:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 150
     permissions:
       contents: write
       actions: write
@@ -31,27 +31,10 @@ jobs:
           echo 'GitHub UTC: ' $(date -u '+%Y-%m-%d %H:%M:%S')
           echo 'Thailand:  ' $(TZ='Asia/Bangkok' date '+%Y-%m-%d %H:%M:%S')
 
-      - name: Run searcher (5h loop)
+      - name: Run searcher (2h loop, auto-renew at end)
         run: python searcher_cloud.py
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_RUN_NUMBER: ${{ github.run_number }}
           DOUYIN_COOKIE: ${{ secrets.DOUYIN_COOKIE }}
-
-      - name: Self-renew (trigger next run, dedup)
-        if: always()
-        run: |
-          EXISTING=$(curl -s -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/searcher.yml/runs?per_page=5&status=in_progress")
-          IN_PROGRESS=$(echo "$EXISTING" | python3 -c "import sys,json; runs=json.load(sys.stdin).get('workflow_runs',[]); current='${{ github.run_number }}'; other=[r['run_number'] for r in runs if str(r['run_number'])!=current]; print(len(other))" 2>/dev/null || echo "0")
-          if [ "$IN_PROGRESS" -gt "0" ]; then
-            echo "Skipped: $IN_PROGRESS other in-progress run(s) exist"
-          else
-            curl -s -X POST "https://api.github.com/repos/${{ github.repository }}/actions/workflows/searcher.yml/dispatches" \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-              -H "User-Agent: renew" \
-              --data '{"ref":"main"}' && echo "Renew OK" || echo "Renew FAIL"
-          fi
