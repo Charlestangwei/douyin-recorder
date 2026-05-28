@@ -1,0 +1,58 @@
+name: Transcribe Release Audio
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: 'Audio filename to transcribe'
+        required: false
+        default: ''
+  repository_dispatch:
+    types: [transcribe_self_renew, transcribe_ready]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: '**/requirements.txt'
+      - name: Cache ML models
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/torch
+            ~/.cache/modelscope
+            ~/.cache/huggingface
+          key: transcribe-v3-${{ runner.os }}
+      - name: Cache apt
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-ffmpeg-${{ runner.os }}
+          restore-keys: |
+            apt-ffmpeg-${{ runner.os }}-
+            apt-ffmpeg-
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          pip install --timeout 60 --force-reinstall torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --timeout 60 funasr requests
+      - name: Transcribe target audio
+        run: python transcribe_release.py
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TRANSCRIBE_FILENAME: ${{ github.event.client_payload.filename || github.event.inputs.filename || '' }}
