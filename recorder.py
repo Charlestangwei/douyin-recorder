@@ -576,7 +576,7 @@ def _fix_mkv_last_segment(mkv_path, seg_duration, anchor_name):
             f.writelines(out_lines)
         log("[{}] ASS trimmed: {} kept, {} removed".format(anchor_name, kept, removed))
     # Step 4: Remux (with or without subtitle)
-    fixed_tmp = mkv_path + '.fixed_tmp'
+    fixed_tmp = mkv_path + '.fix.mkv'
     trim_to = actual_dur * 1.05
     if has_sub:
         cmd = ['ffmpeg', '-y', '-i', mkv_path, '-i', ass_tmp,
