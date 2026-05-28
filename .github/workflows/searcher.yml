@@ -8,7 +8,7 @@ on:
 jobs:
   search:
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+    timeout-minutes: 360
     permissions:
       contents: write
       actions: write
@@ -31,8 +31,8 @@ jobs:
           echo 'GitHub UTC: ' $(date -u '+%Y-%m-%d %H:%M:%S')
           echo 'Thailand:  ' $(TZ='Asia/Bangkok' date '+%Y-%m-%d %H:%M:%S')
 
-      - name: Run searcher (24h loop)
-        run: python searcher.py
+      - name: Run searcher (5h loop)
+        run: python searcher_cloud.py
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
