@@ -902,7 +902,7 @@ def check_renew(elapsed):
     if elapsed > 270*60 and not _renew_triggered and GH_REPO and GH_TOKEN:
         try:
             check_req = urllib.request.Request(
-                f"https://api.github.com/repos/{GH_REPO}/actions/workflows/275535928/runs?per_page=5&status=in_progress",
+                f"https://api.github.com/repos/{GH_REPO}/actions/workflows/continuous.yml/runs?per_page=5&status=in_progress",
                 headers={"Authorization": f"Bearer {GH_TOKEN}"})
             existing = json.loads(urllib.request.urlopen(check_req, timeout=15).read())
             existing_numbers = [r["run_number"] for r in existing.get("workflow_runs", [])]
