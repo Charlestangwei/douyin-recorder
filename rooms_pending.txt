@@ -1,3 +1,3 @@
 # Pending rooms (high traffic, threshold>=10000)
-22942047810 = 三哥 在越南 | online=2907 | total_user=246427 | 累计>=100000 | keyword=越南
+22942047810 = 三哥 在越南 | online=2907 | total_user=252772 | 累计>=100000 | keyword=越南
 4133303577 = Saiwen | online=2693 | total_user=126204 | 累计>=100000 | keyword=美国
