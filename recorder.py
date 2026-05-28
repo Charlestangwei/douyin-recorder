@@ -16,7 +16,7 @@ GROUP_INDEX = os.environ.get("GROUP_INDEX", "")
 if GROUP_INDEX:
     ROOMS_FILE = f"rooms_{GROUP_INDEX}.txt"
 CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "60"))
-MAX_DURATION = int(os.environ.get("MAX_DURATION", str(5 * 3600)))
+MAX_DURATION = int(os.environ.get("MAX_DURATION", str(19800)))
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/tmp/recordings")
 GH_REPO = os.environ.get("GH_REPO", "")
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
