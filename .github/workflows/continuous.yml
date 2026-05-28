@@ -1,0 +1,94 @@
+name: 24h recording
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [record_lives]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: '**/requirements.txt'
+      - name: Cache ML models
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/torch
+            ~/.cache/modelscope
+            ~/.cache/huggingface
+          key: deps-v5-${{ runner.os }}-${{ hashFiles('recorder.py') }}
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-ffmpeg-${{ runner.os }}
+          restore-keys: |
+            apt-ffmpeg-${{ runner.os }}-
+            apt-ffmpeg-
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+          ffmpeg -h muxer=segment 2>&1 | head -3
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+                    python -m pip install --upgrade pip
+          pip install --timeout 60 torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --timeout 60 --force-reinstall funasr requests playwright
+          mkdir -p /tmp/recordings /tmp/transcripts
+      - name: Install Playwright browsers
+        run: python -m playwright install chromium --with-deps
+      - name: Show TH time
+        run: |
+          echo 'GitHub UTC: ' $(date -u '+%Y-%m-%d %H:%M:%S')
+          echo 'Thailand:  ' $(TZ='Asia/Bangkok' date '+%Y-%m-%d %H:%M:%S')
+          echo '=== ffmpeg check ==='
+          which ffmpeg
+          ffmpeg -version 2>&1 | head -1
+          echo '=== segment_time test ==='
+          timeout 5 ffmpeg -f lavfi -i color=c=red:r=1 -t 2 -f segment -segment_time 1 -reset_timestamps 1 /tmp/test_st_%03d.mp4 -y 2>&1 | head -5; echo "exit: $?"
+          ls -la /tmp/test_st_* 2>&1 || echo 'no test files'
+      - name: Set locale
+        run: |
+          sudo locale-gen en_US.UTF-8 || true
+          sudo update-locale LANG=en_US.UTF-8 || true
+          echo LANG=en_US.UTF-8 > /tmp/gh_env
+          echo LC_ALL=en_US.UTF-8 >> /tmp/gh_env
+      - name: Run recorder
+        run: python recorder.py
+        env:
+          CHECK_INTERVAL: 60
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN_ROOMS: ${{ secrets.GITHUB_TOKEN }}
+          GH_RUN_ID: ${{ github.run_id }}
+          GH_RUN_NUMBER: ${{ github.run_number }}
+          DOUYIN_COOKIE: ${{ secrets.DOUYIN_COOKIE }}
+          TEST_MODE: ${{ github.event.inputs.test_mode || '' }}
+          TEST_ROOM: ${{ github.event.inputs.test_room || '344763580' }}
+          TEST_DURATION: ${{ github.event.inputs.test_duration || '60' }}
+      - name: Fallback upload to Release (dedup)
+        if: always()
+        run: python recorder.py fallback
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_RUN_ID: ${{ github.run_id }}
+      
