@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """抖音搜索-API拦截版：搜泰国/日本/越南/美国
-   入选条件: 在线>=10000 或 累计人数>=100000  -> 写入rooms_pending.txt"""
+   入选条件: 在线>=10000 或 累计人数>=100000  -> 写入rooms_pending.txt
+   混合策略: 已收录主播再次达标时覆盖(取最高值)，不达标时跳过"""
 import os, sys, json, time, re, random, base64, urllib.request, traceback as tb
 from datetime import datetime
 from urllib.parse import quote
@@ -9,107 +10,147 @@ GH_REPO = os.environ.get("GH_REPO", "")
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 DOUYIN_COOKIE = os.environ.get("DOUYIN_COOKIE", "")
 
-# 4个关键词，统一条件
 SEARCH_KEYWORDS = ["泰国", "日本", "越南", "美国"]
 MIN_ONLINE = 10000
 MIN_TOTAL = 100000
-
 MAX_RUNTIME = 5 * 3600
 
+# ───── constants ─────
+HEADER = "# Pending rooms (high traffic, threshold>=10000 online or >=100000 cumulative)\n"
+
 def log(msg):
-    _tz_utc7 = datetime.utcfromtimestamp(time.time() + 7*3600)
-    print(f"[{_tz_utc7.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+    _tz = datetime.utcfromtimestamp(time.time() + 7*3600)
+    print(f"[{_tz.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+
+
+def parse_line(line):
+    """解析 rooms_pending.txt 的一行，返回 dict 或 None"""
+    line = line.strip()
+    if not line or line.startswith("#"):
+        return None
+    m = re.match(r'^(\d+)\s*=\s*([^|]+)\s*\|\s*online=(\d+)\s*\|\s*total_user=(\d+)', line)
+    if m:
+        return {
+            'rid': m.group(1),
+            'nickname': m.group(2).strip(),
+            'online': int(m.group(3)),
+            'total': int(m.group(4)),
+            'raw': line,
+        }
+    return None
+
+
+def build_line(rid, nickname, online, total, reason, keyword):
+    return f"{rid} = {nickname} | online={online} | total_user={total} | {reason} | keyword={keyword}"
 
 
 def get_pending_rooms():
-    """读取rooms_pending.txt，返回set(room_id)和内容"""
-    existing = set()
+    """读取 rooms_pending.txt，返回 (pending_map, sha, content)
+       pending_map: {short_id: {nickname, online, total, raw}, ...}"""
+    pending = {}
     try:
         req = urllib.request.Request(
             f"https://api.github.com/repos/{GH_REPO}/contents/rooms_pending.txt",
             headers={"Authorization": f"Bearer {GH_TOKEN}", "Accept": "application/vnd.github+json"})
         data = json.loads(urllib.request.urlopen(req, timeout=30).read())
         c = base64.b64decode(data["content"]).decode("utf-8")
-        for line in c.split("\n"):
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            rid = line.split("=", 1)[0].strip()
-            if rid.isdigit():
-                existing.add(rid)
-        existing_sha = data.get("sha", "")
-        log(f"rooms_pending.txt: {len(existing)} 个待处理房间")
-        return existing, existing_sha, c
+        sha = data.get("sha", "")
+        lines = c.split("\n")
+        for line in lines:
+            p = parse_line(line)
+            if p:
+                pending[p['rid']] = p
+        log(f"rooms_pending.txt: {len(pending)} 个待处理房间")
+        return pending, sha, c
     except urllib.error.HTTPError as e:
         if e.code == 404:
             log("rooms_pending.txt: 尚不存在，将新建")
-            return set(), "", ""
+            return {}, "", ""
         log(f"读取rooms_pending.txt失败: {e}")
-        return set(), "", ""
+        return {}, "", ""
     except Exception as e:
         log(f"读取rooms_pending.txt异常: {e}")
-        return set(), "", ""
+        return {}, "", ""
 
 
-def append_pending_room(rid, nickname, online, total, match_reason, keyword, current_content, current_sha):
-    """向rooms_pending.txt添加一条记录"""
-    line = f"{rid} = {nickname} | online={online} | total_user={total} | {match_reason} | keyword={keyword}"
-    if current_content and rid in current_content:
-        log(f"  {rid}: 已在rooms_pending.txt中，跳过")
-        return current_content, current_sha, False
-
-    new_content = (current_content or "") + line + "\n"
-    b64 = base64.b64encode(new_content.encode("utf-8")).decode()
-
-    for attempt in range(2):
+def write_pending(content, msg, current_sha):
+    """写 rooms_pending.txt，重试一次 409"""
+    b64 = base64.b64encode(content.encode("utf-8")).decode()
+    d = {"message": msg, "content": b64, "sha": current_sha}
+    if not current_sha:
+        d.pop("sha")
+    for _ in range(2):
         try:
-            msg_data = json.dumps({
-                "message": f"searcher: 发现 {rid} = {nickname} (online={online}, total={total})",
-                "content": b64,
-                "sha": current_sha
-            }).encode()
-            if not current_sha:
-                msg_data = json.dumps({
-                    "message": f"searcher: 发现 {rid} = {nickname} (online={online}, total={total})",
-                    "content": b64
-                }).encode()
-
             req = urllib.request.Request(
                 f"https://api.github.com/repos/{GH_REPO}/contents/rooms_pending.txt",
-                data=msg_data,
+                data=json.dumps(d).encode(),
                 headers={"Authorization": f"Bearer {GH_TOKEN}", "Content-Type": "application/json"},
                 method="PUT")
             resp = json.loads(urllib.request.urlopen(req).read())
-            current_sha = resp['commit']['sha']
-            current_content = new_content
-            log(f"  ✓ 已追加: {line}")
-            return current_content, current_sha, True
+            return resp['commit']['sha'], content
         except urllib.error.HTTPError as e:
-            if e.code == 409 and attempt == 0:
-                log(f"  409冲突，重新读取后重试...")
-                try:
-                    req2 = urllib.request.Request(
-                        f"https://api.github.com/repos/{GH_REPO}/contents/rooms_pending.txt",
-                        headers={"Authorization": f"Bearer {GH_TOKEN}", "Accept": "application/vnd.github+json"})
-                    data2 = json.loads(urllib.request.urlopen(req2, timeout=30).read())
-                    current_sha = data2["sha"]
-                    c2 = base64.b64decode(data2["content"]).decode("utf-8")
-                    if rid in c2:
-                        log(f"  {rid}: 其他进程已添加，跳过")
-                        return current_content, current_sha, False
-                    new_content = c2 + line + "\n"
-                    b64 = base64.b64encode(new_content.encode("utf-8")).decode()
-                    current_content = new_content
-                except:
-                    log(f"  重试读取失败")
-                    return current_content, current_sha, False
-            else:
-                log(f"  ✗ 写入失败: {e}")
-                return current_content, current_sha, False
-        except Exception as e:
+            if e.code == 409:
+                log("  409冲突，重新读取后重试...")
+                # Refetch and rebuild
+                p2, sha2, c2 = get_pending_rooms()
+                if c2:
+                    d["sha"] = sha2
+                    d["content"] = base64.b64encode(c2.encode("utf-8")).decode()
+                    continue
             log(f"  ✗ 写入失败: {e}")
-            return current_content, current_sha, False
-    return current_content, current_sha, False
+            return current_sha, content
+    return current_sha, content
+
+
+def update_or_add(rid, nickname, online, total, reason, keyword,
+                  pending_map, current_sha, current_content):
+    """核心逻辑: already in pending → compare & update; new → append"""
+    if rid in pending_map:
+        existing = pending_map[rid]
+        new_online = max(existing['online'], online)
+        new_total = max(existing['total'], total)
+
+        if new_online == existing['online'] and new_total == existing['total']:
+            log(f"  {rid} {nickname}: 已在列表中，数据未变化(online={online},total={total})，跳过")
+            return current_sha, current_content, False
+
+        # 取最大在线 + 最大累计，用更高的理由
+        new_reason_parts = []
+        if new_online >= MIN_ONLINE:
+            new_reason_parts.append(f"在线>={MIN_ONLINE}")
+        if new_total >= MIN_TOTAL:
+            new_reason_parts.append(f"累计>={MIN_TOTAL}")
+        new_reason = "+".join(new_reason_parts)
+
+        new_line = build_line(rid, nickname, new_online, new_total, new_reason, keyword)
+        log(f"  ★ {rid}: 更新 {existing['online']}/{existing['total']} → {new_online}/{new_total} {new_reason}")
+
+        # 替换该行
+        lines = current_content.split("\n")
+        new_lines = []
+        updated = False
+        for line in lines:
+            p = parse_line(line)
+            if p and p['rid'] == rid:
+                new_lines.append(new_line)
+                updated = True
+            else:
+                new_lines.append(line.rstrip())
+        if not updated:
+            new_lines.append(new_line)
+
+        new_content = "\n".join(new_lines) + ("\n" if not new_content.endswith("\n") else "")
+        new_sha, new_content = write_pending(new_content,
+            f"searcher: 更新 {rid} {nickname} online={new_online} total={new_total}", current_sha)
+        return new_sha, new_content, True
+    else:
+        # 新记录
+        new_line = build_line(rid, nickname, online, total, reason, keyword)
+        new_content = (current_content or HEADER) + new_line + "\n"
+        new_sha, new_content = write_pending(new_content,
+            f"searcher: 发现 {rid} = {nickname} (online={online}, total={total})", current_sha)
+        log(f"  ✓ 新增: {new_line}")
+        return new_sha, new_content, True
 
 
 _api_buffer = []
@@ -126,12 +167,11 @@ def _on_api_response(response):
         pass
 
 
-def search_keyword(page, keyword, pending_ids):
-    """搜索一个关键词，返回满足条件的rooms"""
+def search_keyword(page, keyword, pending_map):
+    """搜索关键词，返回达标数据 [(sid, nick, uc, total, reason, is_new), ...]
+       is_new=True → 尚未在pending中; is_new=False → 已存在但数据变高了"""
     search_url = f"https://www.douyin.com/search/{quote(keyword)}?type=live"
     log(f"搜索: {keyword}")
-    log(f"URL: {search_url}")
-
     _api_buffer.clear()
 
     try:
@@ -144,7 +184,7 @@ def search_keyword(page, keyword, pending_ids):
         log("  API未返回，按Enter触发...")
         try:
             inp = page.query_selector('input')
-            if inp:
+            if inp and not inp.get_attribute('disabled'):
                 inp.focus()
                 page.keyboard.press('Enter')
                 page.wait_for_timeout(10000)
@@ -161,7 +201,7 @@ def search_keyword(page, keyword, pending_ids):
 
     log(f"  捕获API响应: {len(_api_buffer)}次")
 
-    results = []  # [(sid, nick, uc, total, reason), ...]
+    results = []  # [(sid, nick, uc, total, reason, is_new)]
     seen = set()
     for data in _api_buffer:
         for item in data.get('data', []):
@@ -186,24 +226,44 @@ def search_keyword(page, keyword, pending_ids):
             except:
                 pass
 
-            if sid in pending_ids:
-                log(f"  {sid} {nick}: 在线={uc} 累计={total} (已在待处理列表，跳过)")
-                continue
+            is_new = sid not in pending_map
 
-            reasons = []
-            if uc >= MIN_ONLINE:
-                reasons.append(f"在线>={MIN_ONLINE}")
-            if total >= MIN_TOTAL:
-                reasons.append(f"累计>={MIN_TOTAL}")
-
-            if reasons:
-                reason_str = "+".join(reasons)
-                results.append((sid, nick or sid, uc, total, reason_str))
-                log(f"  ✓ {sid} {nick}: 在线={uc} 累计={total} -> {reason_str}")
+            if is_new:
+                # 全新房间 - 判断是否达标
+                reasons = []
+                if uc >= MIN_ONLINE:
+                    reasons.append(f"在线>={MIN_ONLINE}")
+                if total >= MIN_TOTAL:
+                    reasons.append(f"累计>={MIN_TOTAL}")
+                if reasons:
+                    reason_str = "+".join(reasons)
+                    results.append((sid, nick, uc, total, reason_str, True))
+                    log(f"  ✓ {sid} {nick}: 在线={uc} 累计={total} -> {reason_str} (新增)")
+                else:
+                    log(f"  ✗ {sid} {nick}: 在线={uc} 累计={total} (未达标, 跳过)")
             else:
-                log(f"  ✗ {sid} {nick}: 在线={uc} 累计={total} (不达标)")
+                # 已有房间 - 比较取最高值
+                old = pending_map[sid]
+                max_online = max(uc, old['online'])
+                max_total = max(total, old['total'])
+                updated = (max_online > old['online'] or max_total > old['total'])
+                still_qualifies = (max_online >= MIN_ONLINE or max_total >= MIN_TOTAL)
 
-    log(f"  关键词'{keyword}': 去重后{len(seen)}个房间, {len(results)}个达标")
+                if updated and still_qualifies:
+                    reasons = []
+                    if max_online >= MIN_ONLINE:
+                        reasons.append(f"在线>={MIN_ONLINE}")
+                    if max_total >= MIN_TOTAL:
+                        reasons.append(f"累计>={MIN_TOTAL}")
+                    reason_str = "+".join(reasons)
+                    results.append((sid, nick, max_online, max_total, reason_str, False))
+                    log(f"  ★ {sid} {nick}: 在线={uc}(旧={old['online']}) 累计={total}(旧={old['total']}) -> 更新为{max_online}/{max_total}")
+                elif not still_qualifies:
+                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} (原记录已存在但不达标数据，跳过)")
+                else:
+                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} (数据未变高，跳过)")
+
+    log(f"  关键词'{keyword}': 去重后{len(seen)}个房间, {len(results)}个需写入")
     return results
 
 
@@ -246,36 +306,41 @@ def main():
 
     start_time = time.time()
     round_num = 0
-    all_time_new = 0
-
-    cond_str = f"在线>={MIN_ONLINE}或累计>={MIN_TOTAL}"
+    total_new = 0
+    total_updates = 0
 
     try:
         while time.time() - start_time < MAX_RUNTIME:
             round_num += 1
             log(f"\n{'='*60}")
             log(f"第{round_num}轮 ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})")
-            log(f"条件: {cond_str}")
-            log(f"运行{time.time()-start_time:.0f}s/{MAX_RUNTIME}s, 已发现{all_time_new}个")
+            log(f"条件: 在线>={MIN_ONLINE} 或 累计>={MIN_TOTAL}")
+            log(f"运行{time.time()-start_time:.0f}s/{MAX_RUNTIME}s, 累计新发现{total_new}个, 更新{total_updates}次")
             log(f"{'='*60}")
 
-            pending_ids, pending_sha, pending_content = get_pending_rooms()
+            pending_map, pending_sha, pending_content = get_pending_rooms()
 
             round_new = 0
+            round_upd = 0
             for i, keyword in enumerate(SEARCH_KEYWORDS):
                 if time.time() - start_time >= MAX_RUNTIME:
                     break
-
                 log(f"\n--- {keyword} ---")
                 try:
-                    results = search_keyword(page, keyword, pending_ids)
-                    for sid, nick, uc, total, reason in results:
-                        pending_content, pending_sha, ok = append_pending_room(
+                    results = search_keyword(page, keyword, pending_map)
+                    for sid, nick, uc, total, reason, is_new in results:
+                        new_sha, new_content, ok = update_or_add(
                             sid, nick, uc, total, reason, keyword,
-                            pending_content, pending_sha)
+                            pending_map, pending_sha, pending_content)
                         if ok:
-                            pending_ids.add(sid)
-                            round_new += 1
+                            pending_sha = new_sha
+                            pending_content = new_content
+                            if is_new:
+                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, keyword))
+                                round_new += 1
+                            else:
+                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, keyword))
+                                round_upd += 1
                 except Exception as e:
                     log(f"'{keyword}'异常: {e}")
                     tb.print_exc()
@@ -285,8 +350,9 @@ def main():
                     log(f"等待{delay}s后下一个关键词...")
                     time.sleep(delay)
 
-            all_time_new += round_new
-            log(f"\n本轮新增{round_new}个 (累计{all_time_new})")
+            total_new += round_new
+            total_updates += round_upd
+            log(f"\n本轮: 新增{round_new}个, 更新{round_upd}个 (累计新增{total_new}, 更新{total_updates})")
 
             remaining = MAX_RUNTIME - (time.time() - start_time)
             if remaining > 30:
@@ -302,7 +368,7 @@ def main():
         pw.stop()
 
     total = time.time() - start_time
-    log(f"结束: 运行{total:.0f}s ({total/60:.0f}min), 共发现{all_time_new}个达标房间")
+    log(f"结束: 运行{total:.0f}s ({total/60:.0f}min), 新增{total_new}, 更新{total_updates}")
 
 if __name__ == "__main__":
     main()
