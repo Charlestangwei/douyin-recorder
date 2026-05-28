@@ -1,1 +1,2 @@
 # Pending rooms (high traffic, threshold>=10000)
+22942047810 = 三哥 在越南 | online=1991 | total_user=219541 | 累计>=100000 | keyword=越南
