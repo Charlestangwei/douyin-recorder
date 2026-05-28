@@ -676,7 +676,7 @@ async function lo(){
 
 
 
-    try{var r2=await fetch(A+'/repos/'+R+'/contents/rooms.txt',{headers:{Accept:'application/vnd.github+json',Authorization:null}});
+    try{var r2=await fetch(A+'/repos/'+R+'/contents/rooms.txt',{headers:{Accept:'application/vnd.github+json'}});
 
 
 
@@ -704,7 +704,7 @@ async function lo(){
 
 
 
-    var hd={Accept:'application/vnd.github+json',Authorization:null};
+    var hd={Accept:'application/vnd.github+json'};
 
 
 
@@ -1260,7 +1260,7 @@ function de(id){
 
 
 
-  fetch(A+'/repos/'+R+'/releases/assets/'+id,{method:'DELETE',headers:{Accept:'application/vnd.github.v3+json',Authorization:null}}).then(function(r){
+  fetch(A+'/repos/'+R+'/releases/assets/'+id,{method:'DELETE',headers:{Accept:'application/vnd.github.v3+json'}}).then(function(r){
 
 
 
