@@ -2698,43 +2698,11 @@ async function lo(){
 
 
 
-        var rmByG=[];
-
-
-
-    for(var gi=0;gi<3;gi++){
-
-
-
-      var rt='';
-
-
-
-      var gL=[];
-
-
-
-      try{var r2=await fetch(A+'/repos/'+R+'/contents/rooms_'+gi+'.txt',{headers:{Accept:'application/vnd.github+json',Authorization:}});var d2=await r2.json();if(d2&&d2.content)rt=us(atob(d2.content))}catch(e){}
-
-
-
-      if(!rt)try{var r=await fetch('https://raw.githubusercontent.com/'+R+'/main/rooms_'+gi+'.txt?_='+Date.now());if(r.ok)rt=await r.text()}catch(e2){}
-
-
-
-      if(rt)rt.split('\n').forEach(function(l){l=l.trim();if(!l||l[0]=='#')return;var p=l.split('=');gL.push({id:p[0].trim(),name:(p[1]||p[0]).trim(),g:gi})});
-
-
-
-      rmByG.push(gL);
-
-
-
-    }
-
-
-
-    rm=rmByG[0].concat(rmByG[1]).concat(rmByG[2]);
+            var rm=[];
+    var rt='';
+    try{var r=await fetch('https://raw.githubusercontent.com/'+R+'/main/rooms.txt?_='+Date.now());if(r.ok)rt=await r.text()}catch(e2){}
+    if(rt)rt.split('
+').forEach(function(l){l=l.trim();if(!l||l[0]=='#')return;var p=l.split('=');rm.push({id:p[0].trim(),name:(p[1]||p[0]).trim()})});
 
 
 
@@ -2754,19 +2722,8 @@ async function lo(){
 
 
 
-    ls={};
-
-
-
-    for(var gi=0;gi<3;gi++){
-
-
-
-      try{var lsr=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/live_status_'+gi+'.json?_='+Date.now());if(lsr.ok){var lx=await lsr.json();for(var k in lx)ls[k]=lx[k];}}catch(le){}
-
-
-
-    }
+        ls={};
+    try{var lsr=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/live_status.json?_='+Date.now());if(lsr.ok)ls=await lsr.json()}catch(le){}
 
 
 
@@ -4968,7 +4925,7 @@ function de(id){
 
 
 
-  fetch(A+'/repos/'+R+'/releases/assets/'+id,{method:'DELETE',headers:{Accept:'application/vnd.github.v3+json',Authorization:}}).then(function(r){
+  fetch(A+'/repos/'+R+'/releases/assets/'+id,{method:'DELETE',headers:{Accept:'application/vnd.github.v3+json'}}).then(function(r){
 
 
 
@@ -5796,7 +5753,7 @@ function svRm(){
 
 
 
-        try{var gr=await fetch(A+'/repos/'+R+'/contents/'+fn,{headers:{Accept:'application/vnd.github+json',Authorization:}});var gd=await gr.json();if(gd&&gd.sha)sha=gd.sha}catch(e){}
+        try{var gr=await fetch(A+'/repos/'+R+'/contents/'+fn,{headers:{Accept:'application/vnd.github+json'}});var gd=await gr.json();if(gd&&gd.sha)sha=gd.sha}catch(e){}
 
 
 
@@ -5808,7 +5765,7 @@ function svRm(){
 
 
 
-        try{var pr=await fetch(A+'/repos/'+R+'/contents/'+fn,{method:'PUT',headers:{Accept:'application/vnd.github+json','Content-Type':'application/json',Authorization:},body:JSON.stringify(body)});
+        try{var pr=await fetch(A+'/repos/'+R+'/contents/'+fn,{method:'PUT',headers:{Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
 
 
 
