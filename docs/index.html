@@ -2714,7 +2714,7 @@ async function lo(){
 
 
 
-      try{var r2=await fetch(A+'/repos/'+R+'/contents/rooms_'+gi+'.txt',{headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+T}});var d2=await r2.json();if(d2&&d2.content)rt=us(atob(d2.content))}catch(e){}
+      try{var r2=await fetch(A+'/repos/'+R+'/contents/rooms_'+gi+'.txt',{headers:{Accept:'application/vnd.github+json',Authorization:}});var d2=await r2.json();if(d2&&d2.content)rt=us(atob(d2.content))}catch(e){}
 
 
 
@@ -2778,7 +2778,7 @@ async function lo(){
 
 
 
-    var hd={Accept:'application/vnd.github+json',Authorization:'Bearer '+T};
+    var hd={Accept:'application/vnd.github+json'};
 
 
 
@@ -4968,7 +4968,7 @@ function de(id){
 
 
 
-  fetch(A+'/repos/'+R+'/releases/assets/'+id,{method:'DELETE',headers:{Accept:'application/vnd.github.v3+json',Authorization:'Bearer '+T}}).then(function(r){
+  fetch(A+'/repos/'+R+'/releases/assets/'+id,{method:'DELETE',headers:{Accept:'application/vnd.github.v3+json',Authorization:}}).then(function(r){
 
 
 
@@ -5796,7 +5796,7 @@ function svRm(){
 
 
 
-        try{var gr=await fetch(A+'/repos/'+R+'/contents/'+fn,{headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+T}});var gd=await gr.json();if(gd&&gd.sha)sha=gd.sha}catch(e){}
+        try{var gr=await fetch(A+'/repos/'+R+'/contents/'+fn,{headers:{Accept:'application/vnd.github+json',Authorization:}});var gd=await gr.json();if(gd&&gd.sha)sha=gd.sha}catch(e){}
 
 
 
@@ -5808,7 +5808,7 @@ function svRm(){
 
 
 
-        try{var pr=await fetch(A+'/repos/'+R+'/contents/'+fn,{method:'PUT',headers:{Accept:'application/vnd.github+json','Content-Type':'application/json',Authorization:'Bearer '+T},body:JSON.stringify(body)});
+        try{var pr=await fetch(A+'/repos/'+R+'/contents/'+fn,{method:'PUT',headers:{Accept:'application/vnd.github+json','Content-Type':'application/json',Authorization:},body:JSON.stringify(body)});
 
 
 
