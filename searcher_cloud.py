@@ -13,7 +13,7 @@ DOUYIN_COOKIE = os.environ.get("DOUYIN_COOKIE", "")
 SEARCH_KEYWORDS = ["泰国", "日本", "越南", "美国"]
 MIN_ONLINE = 10000
 MIN_TOTAL = 100000
-MAX_RUNTIME = 5 * 3600
+MAX_RUNTIME = 2 * 3600  # 2小时
 
 # ───── constants ─────
 HEADER = "# Pending rooms (high traffic, threshold>=10000 online or >=100000 cumulative)\n"
@@ -369,6 +369,25 @@ def main():
 
     total = time.time() - start_time
     log(f"结束: 运行{total:.0f}s ({total/60:.0f}min), 新增{total_new}, 更新{total_updates}")
+
+    # ── 自续命: 触发下一轮 ──
+    log("自续命: 触发下一轮...")
+    try:
+        req = urllib.request.Request(
+            f"https://api.github.com/repos/{GH_REPO}/actions/workflows/searcher.yml/dispatches",
+            data=json.dumps({"ref": "main"}).encode(),
+            headers={
+                "Authorization": f"Bearer {GH_TOKEN}",
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/json",
+                "User-Agent": "self-renew",
+            },
+            method="POST")
+        resp = urllib.request.urlopen(req, timeout=30)
+        log(f"  自续命: HTTP {resp.status}")
+    except Exception as e:
+        log(f"  自续命失败: {e}")
+
 
 if __name__ == "__main__":
     main()
