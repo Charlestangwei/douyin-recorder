@@ -486,6 +486,125 @@ def _build_ass(seg_vc, seg_dm, seg_duration):
             )
             # No break: each danmaku occupies all 10 slots (cascading push-up)
     return '\n'.join(lines)
+
+
+def _parse_ass_time(t):
+    """Convert ASS timestamp (H:MM:SS.cc) to seconds."""
+    parts = t.replace(',', '.').split(':')
+    return float(parts[0]) * 3600 + float(parts[1]) * 60 + float(parts[2])
+
+def _secs_to_ass_with_comma(s):
+    """Convert seconds to ASS timestamp H:MM:SS,cc (comma as decimal separator)."""
+    h = int(s // 3600)
+    m = int((s % 3600) // 60)
+    sec = s % 60
+    return "{:d}:{:02d}:{:06.2f}".format(h, m, sec).replace('.', ',')
+
+def _fix_mkv_last_segment(mkv_path, seg_duration, anchor_name):
+    """If MKV is an incomplete last segment (much shorter than seg_duration),
+    trim ASS subtitle events to match actual video/audio duration."""
+    import subprocess, json, os
+    # Step 1: Get actual duration from video packet timestamps
+    try:
+        out = subprocess.check_output([
+            'ffprobe', '-v', 'quiet',
+            '-select_streams', 'v:0',
+            '-show_entries', 'packet=pts_time',
+            '-of', 'csv=p=0',
+            mkv_path
+        ], timeout=30)
+    except Exception:
+        return
+    csv_data = out.decode('utf-8-sig', errors='replace').strip()
+    if not csv_data:
+        return
+    pts = [float(x) for x in csv_data.split(chr(10)) if x.strip()]
+    if not pts:
+        return
+    actual_dur = max(pts)
+    # Also check audio
+    try:
+        out2 = subprocess.check_output([
+            'ffprobe', '-v', 'quiet',
+            '-select_streams', 'a:0',
+            '-show_entries', 'packet=pts_time',
+            '-of', 'csv=p=0',
+            mkv_path
+        ], timeout=30)
+        pts2 = [float(x) for x in out2.decode('utf-8-sig', errors='replace').strip().split(chr(10)) if x.strip()]
+        if pts2:
+            actual_dur = max(actual_dur, max(pts2))
+    except Exception:
+        pass
+    # If segment is more than half full, no fix needed
+    if actual_dur >= seg_duration * 0.5:
+        return
+    log("[{}] Fixing incomplete MKV: {:.1f}s (expected {}s)".format(anchor_name, actual_dur, seg_duration))
+    # Step 2: Extract ASS subtitle
+    ass_tmp = mkv_path + '.ass_tmp'
+    result = subprocess.run(['ffmpeg', '-y', '-i', mkv_path, '-map', '0:s:0', '-f', 'ass', ass_tmp],
+                            capture_output=True, text=True, timeout=60)
+    has_sub = result.returncode == 0 and os.path.exists(ass_tmp) and os.path.getsize(ass_tmp) > 0
+    if has_sub:
+        # Step 3: Read and trim ASS events
+        with open(ass_tmp, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        out_lines = []
+        max_time = actual_dur
+        kept = 0
+        removed = 0
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('Dialogue:'):
+                parts = stripped.split(',', 9)
+                if len(parts) >= 10:
+                    start_s = _parse_ass_time(parts[1])
+                    end_s = _parse_ass_time(parts[2])
+                    if start_s <= max_time:
+                        if end_s > max_time:
+                            parts[2] = _secs_to_ass_with_comma(max_time)
+                            line = ','.join(parts) + chr(10)
+                        out_lines.append(line)
+                        kept += 1
+                    else:
+                        removed += 1
+                else:
+                    out_lines.append(line)
+            else:
+                out_lines.append(line)
+        with open(ass_tmp, 'w', encoding='utf-8') as f:
+            f.writelines(out_lines)
+        log("[{}] ASS trimmed: {} kept, {} removed".format(anchor_name, kept, removed))
+    # Step 4: Remux (with or without subtitle)
+    fixed_tmp = mkv_path + '.fixed_tmp'
+    trim_to = actual_dur * 1.05
+    if has_sub:
+        cmd = ['ffmpeg', '-y', '-i', mkv_path, '-i', ass_tmp,
+               '-t', str(trim_to), '-c:v', 'copy', '-c:a', 'copy', '-c:s', 'ass',
+               '-map', '0:v', '-map', '0:a', '-map', '1', fixed_tmp]
+    else:
+        cmd = ['ffmpeg', '-y', '-i', mkv_path,
+               '-t', str(trim_to), '-c:v', 'copy', '-c:a', 'copy',
+               '-map', '0:v', '-map', '0:a', fixed_tmp]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    if has_sub:
+        try:
+            os.remove(ass_tmp)
+        except Exception:
+            pass
+    if result.returncode == 0 and os.path.exists(fixed_tmp):
+        old_sz = os.path.getsize(mkv_path)
+        new_sz = os.path.getsize(fixed_tmp)
+        os.replace(fixed_tmp, mkv_path)
+        log("[{}] MKV fixed: {:.1f}s, {:.1f}MB -> {:.1f}MB".format(anchor_name, actual_dur, old_sz/1048576, new_sz/1048576))
+    else:
+        err = result.stderr[:200] if result.stderr else 'unknown'
+        log("[{}] MKV fix FAILED: {}".format(anchor_name, err))
+        try:
+            os.remove(fixed_tmp)
+        except Exception:
+            pass
+
 def _process_segments(output_dir, room_id, anchor_name, seg_files, rec_start, seg_duration):
     """Generate ASS per segment and remux MP4 → MKV. Returns list of (mkv_path, mkv_fname)."""
     data_path = os.path.join(output_dir, f"page_data_{room_id}.json")
@@ -538,6 +657,8 @@ def _process_segments(output_dir, room_id, anchor_name, seg_files, rec_start, se
         if os.path.exists(mkv_path):
             mkv_size = os.path.getsize(mkv_path)
             mkv_name = os.path.basename(mkv_path)
+            _fix_mkv_last_segment(mkv_path, seg_duration, anchor_name)
+            mkv_size = os.path.getsize(mkv_path)
             mkv_results.append((mkv_path, mkv_name))
             log(f"[ASS] {anchor_name} seg{seq_idx} → MKV ({len(seg_dm)} dm, {mkv_size/1024/1024:.1f}MB)")
         else:
