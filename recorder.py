@@ -598,7 +598,7 @@ def _fix_mkv_last_segment(mkv_path, seg_duration, anchor_name):
         os.replace(fixed_tmp, mkv_path)
         log("[{}] MKV fixed: {:.1f}s, {:.1f}MB -> {:.1f}MB".format(anchor_name, actual_dur, old_sz/1048576, new_sz/1048576))
     else:
-        err = result.stderr[:200] if result.stderr else 'unknown'
+        err = result.stderr[-500:] if result.stderr else 'unknown'
         log("[{}] MKV fix FAILED: {}".format(anchor_name, err))
         try:
             os.remove(fixed_tmp)
