@@ -139,8 +139,8 @@ def update_or_add(rid, nickname, online, total, reason, keyword,
         if not updated:
             new_lines.append(new_line)
 
-        new_content = "\n".join(new_lines) + ("\n" if not new_content.endswith("\n") else "")
-        new_sha, new_content = write_pending(new_content,
+        updated_content = "\n".join(new_lines) + ("\n" if not current_content.endswith("\n") else "")
+        new_sha, new_content = write_pending(updated_content,
             f"searcher: 更新 {rid} {nickname} online={new_online} total={new_total}", current_sha)
         return new_sha, new_content, True
     else:
