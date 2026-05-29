@@ -2,7 +2,7 @@
 
 22942047810 = 三哥 在越南 | online=2907 | total_user=293815 | 累计>=100000 | keyword=越南
 4133303577 = Saiwen | online=2693 | total_user=126204 | 累计>=100000 | keyword=美国
-44288600962 = 泰国金枕榴莲【硕宸鲜仓】 | online=1605 | total_user=887444 | 累计>=100000 | keyword=泰国
+44288600962 = 泰国金枕榴莲【硕宸鲜仓】 | online=1605 | total_user=892731 | 累计>=100000 | keyword=泰国
 607051343 = 榴恋之味企业店 | online=46 | total_user=177946 | 累计>=100000 | keyword=泰国
 385103000 = 小瑶一家在日本 | online=25917 | total_user=323746 | 在线>=10000+累计>=100000 | keyword=日本
 36190469060 = 柚柚在美国 | online=5148 | total_user=112780 | 累计>=100000 | keyword=美国
