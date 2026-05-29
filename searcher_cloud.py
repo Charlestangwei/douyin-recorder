@@ -28,21 +28,20 @@ def parse_line(line):
     line = line.strip()
     if not line or line.startswith("#"):
         return None
-    m = re.match(r'^(\d+)\s*=\s*([^|]+)\s*\|\s*online=(\d+)\s*\|\s*total_user=(\d+)\s*\|\s*followers=(\d+)', line)
+    m = re.match(r'^(\d+)\s*=\s*([^|]+)\s*\|\s*online=(\d+)\s*\|\s*total_user=(\d+)', line)
     if m:
         return {
             'rid': m.group(1),
             'nickname': m.group(2).strip(),
             'online': int(m.group(3)),
             'total': int(m.group(4)),
-            'followers': int(m.group(5)),
             'raw': line,
         }
     return None
 
 
-def build_line(rid, nickname, online, total, followers, reason, keyword):
-    return f"{rid} = {nickname} | online={online} | total_user={total} | followers={followers} | {reason} | keyword={keyword}"
+def build_line(rid, nickname, online, total, reason, keyword):
+    return f"{rid} = {nickname} | online={online} | total_user={total} | {reason} | keyword={keyword}"
 
 
 def get_pending_rooms():
@@ -103,19 +102,19 @@ def write_pending(content, msg, current_sha):
     return current_sha, content
 
 
-def update_or_add(rid, nickname, online, total, followers, reason, keyword,
+def update_or_add(rid, nickname, online, total, reason, keyword,
                   pending_map, current_sha, current_content):
     """核心逻辑: already in pending → compare & update; new → append"""
     if rid in pending_map:
         existing = pending_map[rid]
         new_online = max(existing['online'], online)
         new_total = max(existing['total'], total)
-        new_fc = max(followers, existing.get('followers', 0))
 
-        if new_online == existing['online'] and new_total == existing['total'] and new_fc == existing.get('followers', 0):
+        if new_online == existing['online'] and new_total == existing['total']:
             log(f"  {rid} {nickname}: 已在列表中，数据未变化(online={online},total={total})，跳过")
             return current_sha, current_content, False
 
+        # 取最大在线 + 最大累计，用更高的理由
         new_reason_parts = []
         if new_online >= MIN_ONLINE:
             new_reason_parts.append(f"在线>={MIN_ONLINE}")
@@ -123,9 +122,10 @@ def update_or_add(rid, nickname, online, total, followers, reason, keyword,
             new_reason_parts.append(f"累计>={MIN_TOTAL}")
         new_reason = "+".join(new_reason_parts)
 
-        new_line = build_line(rid, nickname, new_online, new_total, new_fc, new_reason, keyword)
-        log(f"  ★ {rid}: 更新 online={existing['online']}->{new_online}, total={existing['total']}->{new_total}, followers={existing.get('followers',0)}->{new_fc}")
+        new_line = build_line(rid, nickname, new_online, new_total, new_reason, keyword)
+        log(f"  ★ {rid}: 更新 {existing['online']}/{existing['total']} → {new_online}/{new_total} {new_reason}")
 
+        # 替换该行
         lines = current_content.split("\n")
         new_lines = []
         updated = False
@@ -141,13 +141,14 @@ def update_or_add(rid, nickname, online, total, followers, reason, keyword,
 
         updated_content = "\n".join(new_lines) + ("\n" if not current_content.endswith("\n") else "")
         new_sha, new_content = write_pending(updated_content,
-            f"searcher: 更新 {rid} {nickname} online={new_online} total={new_total} followers={new_fc}", current_sha)
+            f"searcher: 更新 {rid} {nickname} online={new_online} total={new_total}", current_sha)
         return new_sha, new_content, True
     else:
-        new_line = build_line(rid, nickname, online, total, followers, reason, keyword)
+        # 新记录
+        new_line = build_line(rid, nickname, online, total, reason, keyword)
         new_content = (current_content or HEADER) + new_line + "\n"
         new_sha, new_content = write_pending(new_content,
-            f"searcher: 发现 {rid} = {nickname} (online={online}, total={total}, followers={followers})", current_sha)
+            f"searcher: 发现 {rid} = {nickname} (online={online}, total={total})", current_sha)
         log(f"  ✓ 新增: {new_line}")
         return new_sha, new_content, True
 
@@ -218,13 +219,10 @@ def search_keyword(page, keyword, pending_map):
             raw = item['lives'].get('rawdata', '{}')
             uc = 0
             total = 0
-            followers = 0
             try:
                 rd = json.loads(raw) if isinstance(raw, str) else raw
                 uc = int(rd.get('user_count', 0))
                 total = int(rd.get('stats', {}).get('total_user', 0))
-                fi = rd.get('owner', {}).get('follow_info', {})
-                followers = int(fi.get('follower_count', 0))
             except:
                 pass
 
@@ -239,17 +237,16 @@ def search_keyword(page, keyword, pending_map):
                     reasons.append(f"累计>={MIN_TOTAL}")
                 if reasons:
                     reason_str = "+".join(reasons)
-                    results.append((sid, nick, uc, total, followers, reason_str, True))
-                    log(f"  ✓ {sid} {nick}: 在线={uc} 累计={total} 粉丝={followers} -> {reason_str} (新增)")
+                    results.append((sid, nick, uc, total, reason_str, True))
+                    log(f"  ✓ {sid} {nick}: 在线={uc} 累计={total} -> {reason_str} (新增)")
                 else:
-                    log(f"  ✗ {sid} {nick}: 在线={uc} 累计={total} 粉丝={followers} (未达标, 跳过)")
+                    log(f"  ✗ {sid} {nick}: 在线={uc} 累计={total} (未达标, 跳过)")
             else:
                 # 已有房间 - 比较取最高值
                 old = pending_map[sid]
                 max_online = max(uc, old['online'])
                 max_total = max(total, old['total'])
-                max_fc = max(followers, old.get('followers', 0))
-                updated = (max_online > old['online'] or max_total > old['total'] or max_fc > old.get('followers', 0))
+                updated = (max_online > old['online'] or max_total > old['total'])
                 still_qualifies = (max_online >= MIN_ONLINE or max_total >= MIN_TOTAL)
 
                 if updated and still_qualifies:
@@ -259,12 +256,12 @@ def search_keyword(page, keyword, pending_map):
                     if max_total >= MIN_TOTAL:
                         reasons.append(f"累计>={MIN_TOTAL}")
                     reason_str = "+".join(reasons)
-                    results.append((sid, nick, max_online, max_total, max_fc, reason_str, False))
-                    log(f"  ★ {sid} {nick}: 在线={uc}(旧={old['online']}) 累计={total}(旧={old['total']}) 粉丝={max_fc}(旧={old.get('followers',0)}) -> 更新")
+                    results.append((sid, nick, max_online, max_total, reason_str, False))
+                    log(f"  ★ {sid} {nick}: 在线={uc}(旧={old['online']}) 累计={total}(旧={old['total']}) -> 更新为{max_online}/{max_total}")
                 elif not still_qualifies:
-                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} 粉丝={followers} (原记录已存在但不达标数据，跳过)")
+                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} (原记录已存在但不达标数据，跳过)")
                 else:
-                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} 粉丝={followers} (数据未变高，跳过)")
+                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} (数据未变高，跳过)")
 
     log(f"  关键词'{keyword}': 去重后{len(seen)}个房间, {len(results)}个需写入")
     return results
@@ -331,18 +328,18 @@ def main():
                 log(f"\n--- {keyword} ---")
                 try:
                     results = search_keyword(page, keyword, pending_map)
-                    for sid, nick, uc, total, fc, reason, is_new in results:
+                    for sid, nick, uc, total, reason, is_new in results:
                         new_sha, new_content, ok = update_or_add(
-                            sid, nick, uc, total, fc, reason, keyword,
+                            sid, nick, uc, total, reason, keyword,
                             pending_map, pending_sha, pending_content)
                         if ok:
                             pending_sha = new_sha
                             pending_content = new_content
                             if is_new:
-                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, fc, reason, keyword))
+                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, keyword))
                                 round_new += 1
                             else:
-                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, fc, reason, keyword))
+                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, keyword))
                                 round_upd += 1
                 except Exception as e:
                     log(f"'{keyword}'异常: {e}")
