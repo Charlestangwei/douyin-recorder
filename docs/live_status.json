@@ -7,7 +7,7 @@
     "checked_at": 1780039269
   },
   "239929521193": {
-    "live": false,
+    "live": true,
     "recording": false,
     "start_ts": null,
     "name": "小花一家在日本",
@@ -23,7 +23,7 @@
   "7819906986": {
     "live": true,
     "recording": true,
-    "start_ts": 1780038692,
+    "start_ts": 1780037738,
     "name": "微微在日本（瑜美日用百货）",
     "checked_at": 1780039269
   },
