@@ -1,4 +1,5 @@
-# Pending rooms (high traffic, threshold>=10000)
+# Pending rooms (high traffic, threshold>=10000 online or >=100000 cumulative)
+
 22942047810 = 三哥 在越南 | online=2907 | total_user=293815 | 累计>=100000 | keyword=越南
 4133303577 = Saiwen | online=2693 | total_user=126204 | 累计>=100000 | keyword=美国
 44288600962 = 泰国金枕榴莲【硕宸鲜仓】 | online=1302 | total_user=724460 | 累计>=100000 | keyword=泰国
@@ -9,3 +10,8 @@
 152350993 = 桃子妈在日本（早7点直播） | online=1503 | total_user=141529 | 累计>=100000 | keyword=日本
 79429673433 = 麦麦海外生活 | online=5430 | total_user=106940 | 累计>=100000 | keyword=日本
 3661389727 = 园园在美国带娃 | online=4542 | total_user=100080 | 累计>=100000 | keyword=美国
+50950176797 = 同城果鲜水果严选 | online=47 | total_user=336741 | 累计>=100000 | keyword=泰国
+54118092352 = 半夏70后在日本 | online=829 | total_user=105722 | 累计>=100000 | keyword=日本
+73180139959 = 晓哥在海外(蓝泽百货店) | online=15498 | total_user=141194 | 在线>=10000 | keyword=日本
+83379968716 = 越南女婿大黑 | online=11040 | total_user=124918 | 在线>=10000 | keyword=越南
+91294923462 = 小铭在海外（小铭商贸） | online=16820 | total_user=205861 | 在线>=10000 | keyword=日本
