@@ -74,7 +74,9 @@ def get_pending_rooms():
 
 
 def write_pending(content, msg, current_sha):
-    """写 rooms_pending.txt，重试一次 409"""
+    """写 rooms_pending.txt，重试一次 409
+       FIX #1: 使用 resp['content']['sha']（文件SHA）而非 resp['commit']['sha']（提交SHA）
+       FIX #2: 409重试时保留已构建的 content（不覆盖为 c2）"""
     b64 = base64.b64encode(content.encode("utf-8")).decode()
     d = {"message": msg, "content": b64, "sha": current_sha}
     if not current_sha:
@@ -87,18 +89,23 @@ def write_pending(content, msg, current_sha):
                 headers={"Authorization": f"Bearer {GH_TOKEN}", "Content-Type": "application/json"},
                 method="PUT")
             resp = json.loads(urllib.request.urlopen(req).read())
-            return resp['commit']['sha'], content
+            # FIX: content.sha 是文件blob SHA，commit.sha 是提交SHA
+            # update_or_add 把 SHA 传给下一次 PUT，必须用文件SHA
+            file_sha = resp['content']['sha']
+            return file_sha, content
         except urllib.error.HTTPError as e:
             if e.code == 409:
                 log("  409冲突，重新读取后重试...")
-                # Refetch and rebuild
                 p2, sha2, c2 = get_pending_rooms()
-                if c2:
+                if sha2:
                     d["sha"] = sha2
-                    d["content"] = base64.b64encode(c2.encode("utf-8")).decode()
+                    # FIX: 保留 content（已含新增行），不覆盖为 c2
                     continue
+                log("  409重试失败: 无法获取最新文件SHA")
+                return current_sha, content
             log(f"  ✗ 写入失败: {e}")
             return current_sha, content
+    log("  ✗ 重试2次均失败")
     return current_sha, content
 
 
