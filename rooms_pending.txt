@@ -27,4 +27,4 @@
 96793676963 = 乔子在日本 | online=7076 | total_user=210676 | 累计>=100000 | keyword=日本
 94221852104 = 安棋在美国 | online=3646 | total_user=116898 | 累计>=100000 | keyword=美国
 91326091938 = 越南🇻🇳小公主👑 | online=948 | total_user=111314 | 累计>=100000 | keyword=越南
-3507989600 = 磊丁在美国 | online=2884 | total_user=104144 | 累计>=100000 | keyword=美国
+3507989600 = 磊丁在美国 | online=2884 | total_user=105892 | 累计>=100000 | keyword=美国
