@@ -537,7 +537,7 @@ def _fix_mkv_last_segment(mkv_path, seg_duration, anchor_name):
     except Exception:
         pass
     # If segment is more than half full, no fix needed
-    if actual_dur >= seg_duration * 0.5:
+    if actual_dur >= seg_duration * 0.95:
         return
     log("[{}] Fixing incomplete MKV: {:.1f}s (expected {}s)".format(anchor_name, actual_dur, seg_duration))
     # Step 2: Extract ASS subtitle
