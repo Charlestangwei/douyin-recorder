@@ -1,4 +1,4 @@
-name: Test Baidu Upload v3
+name: Test Baidu Upload v4
 
 on:
   workflow_dispatch:
@@ -20,51 +20,29 @@ jobs:
       - name: Restore Baidu token
         run: |
           mkdir -p ~/.bypy
-          echo "${{ secrets.BYPY_TOKEN }}" | base64 -d > /tmp/token.json
-          python3 -c 'import json,os; json.dump(json.load(open("/tmp/token.json")), open(os.path.expanduser("~/.bypy/bypy.json"), "w"))'
+          echo ${{ secrets.BYPY_TOKEN }}" | base64 -d > /tmp/token.json
+          python3 -c "import json,os; json.dump(json.load(open('/tmp/token.json')), open(os.path.expanduser('~/.bypy/bypy.json'), 'w'))"
 
-      - name: Download and upload speed test
+      - name: Upload MKV with slice=200
         run: |
           ROOM_NAME="麻花在泰国"
           START_TIME="20260530_073145"
           END_TIME="20260530_083205"
           FOLDER="/${ROOM_NAME}/${START_TIME:4:4}${START_TIME:9:2}${START_TIME:11:2}-${END_TIME:9:2}${END_TIME:11:2}/"
-          echo "Target: $FOLDER"
+          echo "Folder: $FOLDER"
           BASE_URL="https://github.com/Charlestangwei/douyin-recorder/releases/download"
-
-          FNAME="961019695933_20260530_073145.danmaku.srt"
-          echo ""
-          echo "=== 1/2: ${FNAME} (0.3MB) ==="
-          START=$(date +%s)
-          curl -sL -o /tmp/"${FNAME}" "${BASE_URL}/${FNAME}/${FNAME}"
-          DL=$(($(date +%s) - START))
-          [ "$DL" -eq "0" ] && DL=1
-          FILESIZE=$(stat -c%s /tmp/"${FNAME}")
-          echo "Download: ${DL}s"
-
-          START=$(date +%s)
-          bypy upload /tmp/"${FNAME}" "${FOLDER}" 2>&1 | grep -v "^<" || true
-          UP=$(($(date +%s) - START))
-          [ "$UP" -eq "0" ] && UP=1
-          echo "Upload: ${UP}s"
-
           FNAME="961019695933_20260530_073145_000.mkv"
-          echo ""
-          echo "=== 2/2: ${FNAME} (644MB) ==="
-          START=$(date +%s)
-          curl -sL -o /tmp/"${FNAME}" "${BASE_URL}/${FNAME}/${FNAME}"
-          DL=$(($(date +%s) - START))
-          [ "$DL" -eq "0" ] && DL=1
-          FILESIZE=$(stat -c%s /tmp/"${FNAME}")
-          echo "Download: ${DL}s, ${FILESIZE} bytes"
-
-          START=$(date +%s)
-          bypy upload /tmp/"${FNAME}" "${FOLDER}" 2>&1 | grep -v "^<" || true
-          UP=$(($(date +%s) - START))
-          [ "$UP" -eq "0" ] && UP=1
-          echo "Upload: ${UP}s"
+          echo "Downloading $FNAME..."
+          curl -sL -o /tmp/$FNAME" $BASE_URL/$FNAME/$FNAME"
+          echo "Uploading with --slice 200 (200MB per chunk)..."
+          SECONDS=0
+          bypy upload --slice 200 /tmp/$FNAME" $FOLDER" 2>&1 || true
+          echo "Upload took ${SECONDS}s"
 
       - name: Verify
         run: |
-          echo "=== Baidu folder structure ==="
+          echo "=== Folder structure ==="
           bypy list "/麻花在泰国/" 2>&1
+          echo ""
+          echo "=== List uploaded file ==="
+          bypy list "/麻花在泰国/05300731-0832/" 2>&1
