@@ -2,7 +2,7 @@
 """抖音搜索-API拦截版：搜日本/越南/美国
    入选条件: 在线>=10000 或 累计人数>=100000  -> 写入rooms_pending.txt
    混合策略: 已收录主播再次达标时覆盖(取最高值)，不达标时跳过"""
-import os, sys, json, time, re, random, base64, urllib.request, traceback as tb
+import os, sys, json, time, re, random, base64, urllib.request, traceback as tb, threading
 from datetime import datetime
 from urllib.parse import quote
 
@@ -387,7 +387,7 @@ def main():
 
             remaining = MAX_RUNTIME - (time.time() - start_time)
             if remaining > 30:
-                wait = min(60, remaining)
+                wait = min(random.randint(240, 300), remaining)
                 log(f"等待{wait:.0f}s后第{round_num+1}轮...")
                 time.sleep(wait)
 
