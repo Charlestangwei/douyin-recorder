@@ -10,7 +10,7 @@ GH_REPO = os.environ.get("GH_REPO", "")
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 DOUYIN_COOKIE = os.environ.get("DOUYIN_COOKIE", "")
 
-SEARCH_KEYWORDS = ["泰国", "日本", "越南", "美国"]
+SEARCH_KEYWORDS = ["日本", "越南", "美国"]
 MIN_ONLINE = 10000
 MIN_TOTAL = 100000
 MAX_RUNTIME = 2 * 3600  # 2小时
