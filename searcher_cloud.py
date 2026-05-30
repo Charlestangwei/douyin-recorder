@@ -302,14 +302,19 @@ def main():
     )
     context.add_cookies(cookie_dict)
     _api_buffer = []
+
+    def on_api_response(resp):
+        if '/aweme/v1/web/live/search/' not in resp.url:
+            return
+        try:
+            data = resp.json()
+            if data.get('status_code') == 0 and 'data' in data:
+                _api_buffer.append(data)
+        except:
+            pass
+
     page = context.new_page()
-    page.on('response', lambda resp: (
-        _api_buffer.append(resp.json()) if '/aweme/v1/web/live/search/' in resp.url
-        and resp.status == 200
-        and resp.json().get('status_code') == 0
-        and 'data' in resp.json()
-        else None
-    ))
+    page.on('response', on_api_response)
 
     log("预热: 访问douyin.com...")
     try:
