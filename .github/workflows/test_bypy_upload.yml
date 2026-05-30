@@ -1,0 +1,49 @@
+name: Test Baidu Upload v7
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bypy
+        run: pip install bypy && python3 -c "import bypy; print('bypy', bypy.__version__)"
+
+      - name: Restore Baidu token + upload via Python
+        shell: python3
+        run: |
+          import json, os, base64, subprocess, time
+          # Restore token
+          b64 = os.environ.get("BYPY_TOKEN")
+          if b64:
+            import json as j, os as o
+            with open(o.path.expanduser("~/.bypy/bypy.json"), "w") as f:
+              j.dump(j.loads(base64.b64decode(b64).decode()), f)
+            print("Token restored")
+          
+          # Download file
+          url = "https://github.com/Charlestangwei/douyin-recorder/releases/download/961019695933_20260530_073145_000.mkv/961019695933_20260530_073145_000.mkv"
+          os.system("curl -sL -o /tmp/test.mkv '" + url + "'")
+          size = os.path.getsize("/tmp/test.mkv")
+          print(f"Downloaded: {size/1024/1024:.0f}MB")
+          
+          # Upload with Python bypy
+          from bypy import ByPy
+          by = ByPy(slice_size=200*1024*1024)
+          start = time.time()
+          result = by.upload("/tmp/test.mkv", "/麻花在泰国/05300731-0832/")
+          elapsed = time.time() - start
+          print(f"Upload result: {result}, took {elapsed:.0f}s")
+          if result == 0:
+            print(f"Speed: {size/1024/1024/elapsed:.2f}MB/s")
+        env:
+          BYPY_TOKEN: ${{ secrets.BYPY_TOKEN }}
+
+      - name: Verify
+        run: |
+          bypy list "/麻花在泰国/05300731-0832/" 2>&1
