@@ -353,7 +353,7 @@ def main():
                     tb.print_exc()
 
                 if i < len(SEARCH_KEYWORDS) - 1 and time.time() - start_time < MAX_RUNTIME:
-                    delay = random.randint(60, 120)
+                    delay = random.randint(300, 360)
                     log(f"等待{delay}s后下一个关键词...")
                     time.sleep(delay)
 
