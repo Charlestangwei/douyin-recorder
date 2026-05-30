@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""抖音搜索-API拦截版：搜泰国/日本/越南/美国
+"""抖音搜索-API拦截版：搜日本/越南/美国
    入选条件: 在线>=10000 或 累计人数>=100000  -> 写入rooms_pending.txt
    混合策略: 已收录主播再次达标时覆盖(取最高值)，不达标时跳过"""
 import os, sys, json, time, re, random, base64, urllib.request, traceback as tb
@@ -301,15 +301,25 @@ def main():
         user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
     )
     context.add_cookies(cookie_dict)
-    page = context.new_page()
-    page.on('response', _on_api_response)
+    pages = {}
+    for kw in SEARCH_KEYWORDS:
+        p = context.new_page()
+        p._api_buffer = []
+        p.on('response', lambda resp, buf=p._api_buffer: (
+            buf.append(resp.json()) if '/aweme/v1/web/live/search/' in resp.url
+            and resp.status == 200
+            and resp.json().get('status_code') == 0
+            and 'data' in resp.json()
+            else None
+        ))
+        pages[kw] = p
 
     log("预热: 访问douyin.com...")
     try:
-        page.goto('https://www.douyin.com/', wait_until='domcontentloaded', timeout=30000)
-        page.wait_for_timeout(5000)
+        pages[SEARCH_KEYWORDS[0]].goto('https://www.douyin.com/', wait_until='domcontentloaded', timeout=30000)
     except:
         pass
+    time.sleep(3)
 
     start_time = time.time()
     round_num = 0
@@ -329,33 +339,47 @@ def main():
 
             round_new = 0
             round_upd = 0
-            for i, keyword in enumerate(SEARCH_KEYWORDS):
+            def search_one(kw):
+                p = pages[kw]
+                p._api_buffer.clear()
+                try:
+                    return search_keyword(p, kw, pending_map)
+                except Exception as e:
+                    log(f"'{kw}'异常: {e}")
+                    return []
+
+            threads = []
+            results_map = {}
+            lock = threading.Lock()
+            def do_search(kw):
+                res = search_one(kw)
+                with lock:
+                    results_map[kw] = res
+
+            for kw in SEARCH_KEYWORDS:
                 if time.time() - start_time >= MAX_RUNTIME:
                     break
-                log(f"\n--- {keyword} ---")
-                try:
-                    results = search_keyword(page, keyword, pending_map)
-                    for sid, nick, uc, total, reason, is_new in results:
-                        new_sha, new_content, ok = update_or_add(
-                            sid, nick, uc, total, reason, keyword,
-                            pending_map, pending_sha, pending_content)
-                        if ok:
-                            pending_sha = new_sha
-                            pending_content = new_content
-                            if is_new:
-                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, keyword))
-                                round_new += 1
-                            else:
-                                pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, keyword))
-                                round_upd += 1
-                except Exception as e:
-                    log(f"'{keyword}'异常: {e}")
-                    tb.print_exc()
+                t = threading.Thread(target=do_search, args=(kw,))
+                t.start()
+                threads.append(t)
 
-                if i < len(SEARCH_KEYWORDS) - 1 and time.time() - start_time < MAX_RUNTIME:
-                    delay = random.randint(300, 360)
-                    log(f"等待{delay}s后下一个关键词...")
-                    time.sleep(delay)
+            for t in threads:
+                t.join()
+
+            for kw, results in results_map.items():
+                for sid, nick, uc, total, reason, is_new in results:
+                    new_sha, new_content, ok = update_or_add(
+                        sid, nick, uc, total, reason, kw,
+                        pending_map, pending_sha, pending_content)
+                    if ok:
+                        pending_sha = new_sha
+                        pending_content = new_content
+                        if is_new:
+                            pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, kw))
+                            round_new += 1
+                        else:
+                            pending_map[sid] = parse_line(build_line(sid, nick, uc, total, reason, kw))
+                            round_upd += 1
 
             total_new += round_new
             total_updates += round_upd
