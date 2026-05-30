@@ -1,0 +1,46 @@
+name: Test Baidu Upload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bypy
+        run: pip install bypy
+
+      - name: Restore Baidu token
+        run: |
+          mkdir -p ~/.bypy
+          echo "${{ secrets.BYPY_TOKEN }}" | base64 -d > /tmp/token.json
+          python3 -c "import json,os; json.dump(json.load(open('/tmp/token.json')), open(os.path.expanduser('~/.bypy/bypy.json'), 'w'))"
+          python3 -c "import os,json; print('Token restored:', list(json.load(open(os.path.expanduser('~/.bypy/bypy.json'))).keys()))"
+
+      - name: Download and upload test file
+        run: |
+          ROOM_NAME="麻花在泰国"
+          START_TIME="20260530_073145"
+          END_TIME="20260530_083205"
+          BASE_URL="https://github.com/Charlestangwei/douyin-recorder/releases/download"
+          FOLDER="/apps/bypy/${ROOM_NAME}/${START_TIME:0:8}日${START_TIME:9:4}-${END_TIME:9:4}/"
+          echo "Target folder: $FOLDER"
+
+          # Upload a small test file first (danmaku.srt 0.3MB)
+          FNAME="961019695933_20260530_073145.danmaku.srt"
+          URL="${BASE_URL}/${FNAME}/${FNAME}"
+          echo "Downloading: ${FNAME}"
+          curl -sL -o /tmp/"${FNAME}" "${URL}"
+          echo "Uploading: ${FNAME}"
+          bypy upload /tmp/"${FNAME}" "${FOLDER}" 2>&1
+
+      - name: Verify
+        run: |
+          bypy list "/apps/bypy/麻花在泰国/" 2>&1
