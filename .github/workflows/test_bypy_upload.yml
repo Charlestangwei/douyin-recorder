@@ -1,4 +1,4 @@
-name: Test Baidu Upload
+name: Test Baidu Upload v2
 
 on:
   workflow_dispatch:
@@ -22,25 +22,51 @@ jobs:
           mkdir -p ~/.bypy
           echo "${{ secrets.BYPY_TOKEN }}" | base64 -d > /tmp/token.json
           python3 -c "import json,os; json.dump(json.load(open('/tmp/token.json')), open(os.path.expanduser('~/.bypy/bypy.json'), 'w'))"
-          python3 -c "import os,json; print('Token restored:', list(json.load(open(os.path.expanduser('~/.bypy/bypy.json'))).keys()))"
 
-      - name: Download and upload test file
+      - name: Download and upload speed test
         run: |
           ROOM_NAME="麻花在泰国"
           START_TIME="20260530_073145"
           END_TIME="20260530_083205"
-          BASE_URL="https://github.com/Charlestangwei/douyin-recorder/releases/download"
-          FOLDER="/apps/bypy/${ROOM_NAME}/${START_TIME:0:8}日${START_TIME:9:4}-${END_TIME:9:4}/"
+
+          # Folder name: MMddHHMM-HHMM (e.g. 05300731-0832)
+          FOLDER="/${ROOM_NAME}/${START_TIME:4:4}${START_TIME:9:2}${START_TIME:11:2}-${END_TIME:9:2}${END_TIME:11:2}/"
           echo "Target folder: $FOLDER"
 
-          # Upload a small test file first (danmaku.srt 0.3MB)
+          BASE_URL="https://github.com/Charlestangwei/douyin-recorder/releases/download"
+
+          # Test 1: danmaku.srt (0.3MB)
           FNAME="961019695933_20260530_073145.danmaku.srt"
-          URL="${BASE_URL}/${FNAME}/${FNAME}"
-          echo "Downloading: ${FNAME}"
-          curl -sL -o /tmp/"${FNAME}" "${URL}"
-          echo "Uploading: ${FNAME}"
-          bypy upload /tmp/"${FNAME}" "${FOLDER}" 2>&1
+          echo "=== Test 1: ${FNAME} (0.3MB) ==="
+          START=$(date +%s)
+          curl -sL -o /tmp/"${FNAME}" "${BASE_URL}/${FNAME}/${FNAME}"
+          END=$(date +%s)
+          DL_SPEED=$(echo "scale=2; $(stat -c%s /tmp/${FNAME}) / 1048576 / ($END - $START)" | bc)
+          echo "Download: $(($END - $START))s, ${DL_SPEED}MB/s"
+          START=$(date +%s)
+          bypy upload /tmp/"${FNAME}" "${FOLDER}" 2>&1 | grep -v "^<"
+          END=$(date +%s)
+          UP_SPEED=$(echo "scale=2; $(stat -c%s /tmp/${FNAME}) / 1048576 / ($END - $START)" | bc)
+          echo "Upload: $(($END - $START))s, ${UP_SPEED}MB/s"
+
+          # Test 2: seg0.mkv (644MB)
+          FNAME="961019695933_20260530_073145_000.mkv"
+          echo ""
+          echo "=== Test 2: ${FNAME} (644MB) ==="
+          START=$(date +%s)
+          curl -sL -o /tmp/"${FNAME}" "${BASE_URL}/${FNAME}/${FNAME}"
+          END=$(date +%s)
+          DL_TIME=$(($END - $START))
+          DL_SIZE=$(stat -c%s /tmp/${FNAME})
+          DL_SPEED=$(echo "scale=2; $DL_SIZE / 1048576 / $DL_TIME" | bc)
+          echo "Download: ${DL_TIME}s, ${DL_SPEED}MB/s (${DL_SIZE} bytes)"
+          START=$(date +%s)
+          bypy upload /tmp/"${FNAME}" "${FOLDER}" 2>&1 | grep -v "^<"
+          END=$(date +%s)
+          UP_TIME=$(($END - $START))
+          UP_SPEED=$(echo "scale=2; $DL_SIZE / 1048576 / $UP_TIME" | bc)
+          echo "Upload: ${UP_TIME}s, ${UP_SPEED}MB/s"
 
       - name: Verify
         run: |
-          bypy list "/apps/bypy/麻花在泰国/" 2>&1
+          bypy list "/麻花在泰国/" 2>&1
