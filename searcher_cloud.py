@@ -301,20 +301,8 @@ def main():
         user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
     )
     context.add_cookies(cookie_dict)
-    _api_buffer = []
-
-    def on_api_response(resp):
-        if '/aweme/v1/web/live/search/' not in resp.url:
-            return
-        try:
-            data = resp.json()
-            if data.get('status_code') == 0 and 'data' in data:
-                _api_buffer.append(data)
-        except:
-            pass
-
     page = context.new_page()
-    page.on('response', on_api_response)
+    page.on('response', _on_api_response)
 
     log("预热: 访问douyin.com...")
     try:
