@@ -27,7 +27,7 @@
 96793676963 = 乔子在日本 | online=8194 | total_user=210676 | 累计>=100000 | keyword=日本
 94221852104 = 安棋在美国 | online=5857 | total_user=116898 | 累计>=100000 | keyword=美国
 91326091938 = 越南🇻🇳小公主👑 | online=1090 | total_user=192466 | 累计>=100000 | keyword=越南
-3507989600 = 磊丁在美国 | online=4461 | total_user=113476 | 累计>=100000 | keyword=美国
+3507989600 = 磊丁在美国 | online=7135 | total_user=113476 | 累计>=100000 | keyword=美国
 65200314438 = 晓哥海外生活(樱桃) | online=5815 | total_user=116975 | 累计>=100000 | keyword=日本
 2297062986 = 燕子 i | online=4518 | total_user=143870 | 累计>=100000 | keyword=越南
 36895400594 = 小花一家在日本 | online=14147 | total_user=178999 | 在线>=10000+累计>=100000 | keyword=日本
