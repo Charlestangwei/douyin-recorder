@@ -748,7 +748,7 @@ async function lo(){
 
 
 
-      var t=gt(a.name),p=pfn(a.name),id=p?p.id:null;if(t=='m'){var mk=id+'|'+(p&&p.s?p.s:'');mt[mk]=a.url;if(id&&!mt[id])mt[id]=a.url;try{var _b=JSON.parse(r.body);if(_b&&_b.pv){mt_pv[mk]=_b.pv;if(id&&!mt_pv[id])mt_pv[id]=_b.pv;}if(_b&&_b.tv){mt_tv[mk]=_b.tv;if(id&&!mt_tv[id])mt_tv[id]=_b.tv;}if(_b&&_b.dt){mt_dt[mk]=_b.dt;if(id&&!mt_dt[id])mt_dt[id]=_b.dt;}}catch(_e){}return;}
+      var t=gt(a.name),p=pfn(a.name),id=p?p.id:null;if(t=='m'){var mk=id+'|'+(p&&p.s?p.s:'');mt[mk]=a.url;if(id&&!mt[id])mt[id]=a.url;try{var _b=JSON.parse(r.body);if(_b&&_b.pv!==null){mt_pv[mk]=_b.pv;if(id&&!mt_pv[id])mt_pv[id]=_b.pv;}if(_b&&_b.tv!==null&&_b.tv!==undefined){mt_tv[mk]=_b.tv;if(id&&!mt_tv[id])mt_tv[id]=_b.tv;}if(_b&&_b.dt!==null&&_b.dt!==undefined){mt_dt[mk]=_b.dt;if(id&&!mt_dt[id])mt_dt[id]=_b.dt;}}catch(_e){}return;}
 
 
 
@@ -1090,7 +1090,7 @@ function rp(mt,mt_pv,mt_tv,mt_dt){
 
 
 
-    var dn=p.an;if(dn==='oth')dn='其他主播';var _dicon='';if(mt_dt){var _dv=mt_dt[p.ri+'|'+p.st];if(!_dv&&p.ri&&mt_dt)_dv=mt_dt[p.ri];if(_dv==='mobile')_dicon='📱';else if(_dv==='pc')_dicon='🖥️';}h+='<div class="anchor-name">'+eh(dn)+(p.ri?' <a href="https://live.douyin.com/'+p.ri+'" target="_blank" style="font-size:11px;color:var(--accent3);text-decoration:none">'+p.ri+'</a>':'')+'</div>';h+='<div class="pkl-topright">'+(function(){var _pv=(mt_pv&&mt_pv[p.ri+'|'+p.st])||(p.ri&&mt_pv&&mt_pv[p.ri])||'';var _tv=(mt_tv&&mt_tv[p.ri+'|'+p.st])||(p.ri&&mt_tv&&mt_tv[p.ri])||'';return (_pv?'<span class="pkl" style="color:#fff;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;font-size:12px;font-weight:700">🔴 '+Number(_pv).toLocaleString()+'</span>':'<span class="pkl" style="color:#fff;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;font-size:12px;font-weight:700">🔴 -</span>')+(_tv?'<span class="pkl" style="color:#fff;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;font-size:12px;font-weight:700">💚 '+eh(_tv)+'</span>':'')})()+'</div>';
+    var dn=p.an;if(dn==='oth')dn='其他主播';var _dicon='';if(mt_dt){var _dv=mt_dt[p.ri+'|'+p.st];if(!_dv&&p.ri&&mt_dt)_dv=mt_dt[p.ri];if(_dv==='mobile')_dicon='📱';else if(_dv==='pc')_dicon='🖥️';}h+='<div class="anchor-name">'+eh(dn)+(p.ri?' <a href="https://live.douyin.com/'+p.ri+'" target="_blank" style="font-size:11px;color:var(--accent3);text-decoration:none">'+p.ri+'</a>':'')+'</div>';h+='<div class="pkl-topright">'+(function(){var _pv=((mt_pv&&mt_pv[p.ri+'|'+p.st])!==undefined?mt_pv[p.ri+'|'+p.st]:mt_pv&&mt_pv[p.ri]);var _tv=((mt_tv&&mt_tv[p.ri+'|'+p.st])!==undefined?mt_tv[p.ri+'|'+p.st]:mt_tv&&mt_tv[p.ri]);return (_pv!==''&&_pv!==null&&_pv!==undefined?'<span class="pkl" style="color:#fff;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;font-size:12px;font-weight:700">🔴 '+Number(_pv).toLocaleString()+'</span>':'<span class="pkl" style="color:#fff;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;font-size:12px;font-weight:700">🔴 -</span>')+(_tv?'<span class="pkl" style="color:#fff;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;font-size:12px;font-weight:700">💚 '+eh(_tv)+'</span>':'')})()+'</div>';
 
 
 
