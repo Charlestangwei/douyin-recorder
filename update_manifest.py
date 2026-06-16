@@ -2,18 +2,33 @@ import os, json, base64, urllib.request
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 GH_REPO = os.environ.get("GH_REPO", "")
-API = f"https://api.github.com/repos/{GH_REPO}"
-HEADERS = {"Authorization": f"Bearer {GH_TOKEN}", "Accept": "application/vnd.github+json"}
+API = "https://api.github.com/repos/" + GH_REPO
+HEADERS = {"Authorization": "Bearer " + GH_TOKEN, "Accept": "application/vnd.github+json"}
 
-with open("/tmp/mkv_input/manifest.json") as f:
+with open("/tmp/mkv_work/manifest.json") as f:
     backup_manifest = json.load(f)
+
+# Match artifacts by name pattern
+try:
+    req = urllib.request.Request(API + "/actions/artifacts?per_page=20", headers=HEADERS)
+    arts = json.loads(urllib.request.urlopen(req, timeout=15).read())["artifacts"]
+    DATE = list(backup_manifest.values())[0]["date"] if backup_manifest else ""
+    for a in arts:
+        if a["name"] == "mkv-backup-" + DATE:
+            aid = a["id"]
+            expires = a["expires_at"][:10]
+            for room_id in backup_manifest:
+                backup_manifest[room_id]["artifact_id"] = aid
+                backup_manifest[room_id]["expires"] = expires
+            break
+except Exception as e:
+    print("Artifact lookup: " + str(e))
 
 existing = {}
 existing_sha = None
 try:
     req = urllib.request.Request(API + "/contents/docs/manifest.json", headers=HEADERS)
-    resp = urllib.request.urlopen(req, timeout=15)
-    data = json.loads(resp.read())
+    data = json.loads(urllib.request.urlopen(req, timeout=15).read())
     existing = json.loads(base64.b64decode(data["content"]).decode("utf-8"))
     existing_sha = data["sha"]
 except:
@@ -21,9 +36,9 @@ except:
 
 existing.update(backup_manifest)
 merged = json.dumps(existing, indent=2, ensure_ascii=False)
-url = API + "/contents/docs/manifest.json"
+
 body = json.dumps({
-    "message": f"backup mkv: {list(backup_manifest.keys())}",
+    "message": "backup manifest: " + str(list(backup_manifest.keys())),
     "content": base64.b64encode(merged.encode()).decode(),
     "sha": existing_sha,
     "branch": "main"
@@ -32,6 +47,9 @@ body = json.dumps({
     "content": base64.b64encode(merged.encode()).decode(),
     "branch": "main"
 }).encode()
-req = urllib.request.Request(url, data=body, headers={**HEADERS, "Content-Type": "application/json"}, method="PUT")
+
+req = urllib.request.Request(API + "/contents/docs/manifest.json", data=body, headers={**HEADERS, "Content-Type": "application/json"}, method="PUT")
 urllib.request.urlopen(req, timeout=15)
 print("manifest.json updated!")
+print("Rooms: " + str(list(backup_manifest.keys())))
+print("Artifact ID: " + str(backup_manifest.get(list(backup_manifest.keys())[0], {}).get("artifact_id", "N/A")))
