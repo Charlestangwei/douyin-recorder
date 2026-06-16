@@ -9,5 +9,4 @@ for k, v in json.load(open("/tmp/mkv_work/manifest.json")).items():
             st = parts[1]
     data.append({"key": k, "file": v.get("merged_file", k + "_merged.mkv"), "start_ts": st})
 with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-    f.write("rooms=" + json.dumps(data) + "
-")
+    f.write("rooms=" + json.dumps(data) + "\n")
