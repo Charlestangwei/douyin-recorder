@@ -103,13 +103,7 @@ for key, session in sessions.items():
         "artifact_id": None
     }
 
-    for s in segs:
-        try:
-            dreq = urllib.request.Request(API + "/releases/assets/" + str(s["asset_id"]), headers=HEADERS, method="DELETE")
-            urllib.request.urlopen(dreq, timeout=30)
-            log("  Deleted " + s["name"])
-        except Exception as e:
-            log("  DEL FAIL " + s["name"])
+
 
 with open(os.path.join(WORK_DIR, "manifest.json"), "w", encoding="utf-8") as f:
     json.dump(manifest, f, indent=2, ensure_ascii=False)
@@ -149,5 +143,15 @@ for key in sessions:
                 log("  Upload OK (no id)")
         else:
             log("  Upload FAILED: " + result.stderr.decode()[:200])
+
+    # Delete Release assets after upload succeeds
+    if os.path.exists(path):
+        for s in segs:
+            try:
+                dreq = urllib.request.Request(API + "/releases/assets/" + str(s["asset_id"]), headers=HEADERS, method="DELETE")
+                urllib.request.urlopen(dreq, timeout=30)
+                log("  Deleted " + s["name"])
+            except Exception as e:
+                log("  DEL FAIL " + s["name"])
 
 log("Manifest saved. Done!")
