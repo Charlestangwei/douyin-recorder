@@ -5,53 +5,45 @@ GH_REPO = os.environ.get("GH_REPO", "")
 API = "https://api.github.com/repos/" + GH_REPO
 HEADERS = {"Authorization": "Bearer " + GH_TOKEN, "Accept": "application/vnd.github+json"}
 
-with open("/tmp/mkv_work/manifest.json") as f:
-    backup_manifest = json.load(f)
-
-# Match artifacts by name pattern
-try:
-    req = urllib.request.Request(API + "/actions/artifacts?per_page=20", headers=HEADERS)
-    arts = json.loads(urllib.request.urlopen(req, timeout=15).read())["artifacts"]
-    DATE = list(backup_manifest.values())[0]["date"] if backup_manifest else ""
-    for a in arts:
-        aname = a["name"]
-        if a["name"].startswith("mkv-room-") and a["name"] != "mkv-backup-" + DATE:
-            room = a["name"].replace("mkv-room-", "")
-            # Try to match by room prefix
-            for room_id in backup_manifest:
-                if room_id.startswith(room.split("-")[0]):
-                    backup_manifest[room_id]["artifact_id"] = a["id"]
-                    backup_manifest[room_id]["expires"] = a["expires_at"][:10]
-except Exception as e:
-    print("Artifact lookup: " + str(e))
-
+# Fetch manifest.json from GitHub
 existing = {}
 existing_sha = None
 try:
     req = urllib.request.Request(API + "/contents/docs/manifest.json", headers=HEADERS)
-    data = json.loads(urllib.request.urlopen(req, timeout=15).read())
+    resp = urllib.request.urlopen(req, timeout=15).read()
+    data = json.loads(resp)
     existing = json.loads(base64.b64decode(data["content"]).decode("utf-8"))
     existing_sha = data["sha"]
-except:
+except Exception as e:
+    print("Could not load existing manifest: " + str(e))
+
+# List artifacts and match mkv-room-* names
+try:
+    req = urllib.request.Request(API + "/actions/artifacts?per_page=50", headers=HEADERS)
+    arts = json.loads(urllib.request.urlopen(req, timeout=15).read())["artifacts"]
+    for a in arts:
+        aname = a["name"]
+        if aname.startswith("mkv-room-"):
+            room_key = aname[9:]
+            if room_key in existing:
+                existing[room_key]["artifact_id"] = a["id"]
+                existing[room_key]["expires"] = a["expires_at"][:10]
+                print("Matched " + room_key[:30] + " -> id=" + str(a["id"]))
+except Exception as e:
+    print("Artifact matching error: " + str(e))
     pass
 
-existing.update(backup_manifest)
-merged = json.dumps(existing, indent=2, ensure_ascii=False)
-
-body = json.dumps({
-    "message": "backup manifest: " + str(list(backup_manifest.keys())),
-    "content": base64.b64encode(merged.encode()).decode(),
-    "sha": existing_sha,
-    "branch": "main"
-} if existing_sha else {
-    "message": "init manifest.json",
-    "content": base64.b64encode(merged.encode()).decode(),
-    "branch": "main"
-}).encode()
-
-req = urllib.request.Request(API + "/contents/docs/manifest.json", data=body, headers={**HEADERS, "Content-Type": "application/json"}, method="PUT")
-urllib.request.urlopen(req, timeout=15)
-print("manifest.json updated!")
-print("Rooms: " + str(list(backup_manifest.keys())))
-if backup_manifest:
-    print("Artifact ID: ok")
+if existing_sha:
+    merged = json.dumps(existing, indent=2, ensure_ascii=False)
+    body = json.dumps({
+        "message": "update manifest with artifact IDs",
+        "content": base64.b64encode(merged.encode()).decode(),
+        "sha": existing_sha,
+        "branch": "main"
+    }).encode()
+    req = urllib.request.Request(API + "/contents/docs/manifest.json", data=body,
+        headers={**HEADERS, "Content-Type": "application/json"}, method="PUT")
+    urllib.request.urlopen(req, timeout=15)
+    print("Manifest pushed!")
+else:
+    print("No existing manifest to update")
