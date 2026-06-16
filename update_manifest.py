@@ -14,13 +14,12 @@ try:
     arts = json.loads(urllib.request.urlopen(req, timeout=15).read())["artifacts"]
     DATE = list(backup_manifest.values())[0]["date"] if backup_manifest else ""
     for a in arts:
-        if a["name"] == "mkv-backup-" + DATE:
-            aid = a["id"]
-            expires = a["expires_at"][:10]
-            for room_id in backup_manifest:
-                backup_manifest[room_id]["artifact_id"] = aid
-                backup_manifest[room_id]["expires"] = expires
-            break
+        aname = a["name"]
+        if aname.startswith("mkv-room-"):
+            room = aname[9:]
+            if room in backup_manifest:
+                backup_manifest[room]["artifact_id"] = a["id"]
+                backup_manifest[room]["expires"] = a["expires_at"][:10]
 except Exception as e:
     print("Artifact lookup: " + str(e))
 
