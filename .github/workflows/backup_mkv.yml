@@ -38,6 +38,11 @@ jobs:
           name: mkv-backup-${{ github.event.inputs.date }}
           path: /tmp/mkv_work/*/*_merged.mkv
           retention-days: 90
+      - name: Cleanup Release assets
+        run: python cleanup_release.py ${{ github.event.inputs.date }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
       - name: Update manifest
         run: python update_manifest.py
         env:
