@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install -y -qq ffmpeg || true
           ffmpeg -version | head -1
       - name: Scan releases for room list
-        run: python backup_mkv.py ${{ github.event.inputs.date }}
+        run: python scan_releases.py ${{ github.event.inputs.date }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_REPO: ${{ github.repository }}
