@@ -35,7 +35,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
 
       - name: Upload per-room artifacts
-        run: bash upload_rooms.sh
+        run: |
+          npm install @actions/artifact@1.1.1
+          node upload_rooms.js
 
       - name: Cleanup Release assets
         run: python cleanup_release.py ${{ github.event.inputs.date }}
