@@ -1542,7 +1542,7 @@ cls('dm');
 
 
 
-document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();var p=t.href.split('/actions/artifacts/')[1].split('/')[0];window.open('https://github.com/'+R+'/actions/artifacts/'+p,'_blank')}});
+document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();var aid=t.href.split('/actions/artifacts/')[1].split('/')[0];var url='https://api.github.com/repos/'+R+'/actions/artifacts/'+aid;fetch(url,{headers:{Authorization:'Bearer '+T}}).then(function(r){return r.json()}).then(function(d){var rid=d.workflow_run&&d.workflow_run.id;if(rid){window.open('https://github.com/'+R+'/actions/runs/'+rid+'/artifacts/'+aid,'_blank')}else{window.open('https://github.com/'+R+'/actions','_blank')}}).catch(function(){window.open('https://github.com/'+R+'/actions','_blank')})}});
 </script>
 
 
