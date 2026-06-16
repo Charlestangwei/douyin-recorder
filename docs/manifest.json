@@ -75,5 +75,77 @@
     "artifact_id": 7657757023,
     "expires": "2026-09-14",
     "run_id": 27595039839
+  },
+  "A8888288889_20260612_120823": {
+    "room": "A8888288889",
+    "date": "20260612",
+    "start_ts": "20260612_120823",
+    "merged_file": "A8888288889_20260612_120823_merged.mkv",
+    "segments": 6,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "A8888288889_20260612_112128": {
+    "room": "A8888288889",
+    "date": "20260612",
+    "start_ts": "20260612_112128",
+    "merged_file": "A8888288889_20260612_112128_merged.mkv",
+    "segments": 3,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "A8888288889_20260612_111849": {
+    "room": "A8888288889",
+    "date": "20260612",
+    "start_ts": "20260612_111849",
+    "merged_file": "A8888288889_20260612_111849_merged.mkv",
+    "segments": 1,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "A8888288889_20260612_111239": {
+    "room": "A8888288889",
+    "date": "20260612",
+    "start_ts": "20260612_111239",
+    "merged_file": "A8888288889_20260612_111239_merged.mkv",
+    "segments": 1,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "A8888288889_20260612_110113": {
+    "room": "A8888288889",
+    "date": "20260612",
+    "start_ts": "20260612_110113",
+    "merged_file": "A8888288889_20260612_110113_merged.mkv",
+    "segments": 1,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "A8888288889_20260612_104332": {
+    "room": "A8888288889",
+    "date": "20260612",
+    "start_ts": "20260612_104332",
+    "merged_file": "A8888288889_20260612_104332_merged.mkv",
+    "segments": 2,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "961019695933_20260612_073157": {
+    "room": "961019695933",
+    "date": "20260612",
+    "start_ts": "20260612_073157",
+    "merged_file": "961019695933_20260612_073157_merged.mkv",
+    "segments": 5,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
+  },
+  "961019695933_20260612_061039": {
+    "room": "961019695933",
+    "date": "20260612",
+    "start_ts": "20260612_061039",
+    "merged_file": "961019695933_20260612_061039_merged.mkv",
+    "segments": 5,
+    "backup_date": "2026-06-16",
+    "artifact_id": null
   }
 }
