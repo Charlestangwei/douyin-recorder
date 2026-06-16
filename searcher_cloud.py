@@ -184,8 +184,21 @@ def search_keyword(page, keyword, pending_map):
     page.wait_for_timeout(15000)
     results = []
     try:
-        room_ids = []
-        js = r'var a=document.querySelectorAll("a[href*=\"live.douyin.com/\"]");var s={};var o=[];a.forEach(function(e){var m=e.href.match(/live\\.douyin\\.com\\/(\\d+)/);if(m&&!s[m[1]]){s[m[1]]=1;o.push(m[1])}});JSON.stringify(o)'
+        js = """
+            (() => {
+                var links = document.querySelectorAll("a[href*=\"live.douyin.com/\"]");
+                var seen = {};
+                var result = [];
+                links.forEach(function(a) {
+                    var m = a.href.match(/live\\.douyin\\.com\/(\d+)/);
+                    if (m && !seen[m[1]]) {
+                        seen[m[1]] = true;
+                        result.push(m[1]);
+                    }
+                });
+                return JSON.stringify(result);
+            })()
+        """
         raw = page.evaluate(js)
         room_ids = json.loads(raw)
         log("  发现: " + str(len(room_ids)) + " 个房间")
