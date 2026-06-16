@@ -97,14 +97,6 @@ for key, session in sessions.items():
                      "merged_file": merged_name if len(dl_files) > 1 else segs[0]["name"],
                      "segments": len(segs), "backup_date": time.strftime("%Y-%m-%d")}
 
-    # Delete Release assets AFTER merge
-    for s in segs:
-        try:
-            dreq = urllib.request.Request(API + "/releases/assets/" + str(s["asset_id"]), headers=HEADERS, method="DELETE")
-            urllib.request.urlopen(dreq, timeout=30)
-            log("  Deleted " + s["name"])
-        except Exception as e:
-            log("  DEL FAIL " + s["name"])
 
 with open(os.path.join(WORK_DIR, "manifest.json"), "w", encoding="utf-8") as f:
     json.dump(manifest, f, indent=2, ensure_ascii=False)
