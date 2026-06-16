@@ -129,20 +129,7 @@ for key in sessions:
         run_id = os.environ.get("GH_RUN_ID", "0")
         fsize = os.path.getsize(path)
         log("  Uploading " + str(round(fsize/1024/1024)) + " MB via curl...")
-        import subprocess
-        cmd = ["curl", "-s", "-L", "-X", "POST",
-               "-H", "Authorization: Bearer " + GH_TOKEN,
-               "-F", "file=@" + path,
-               "https://uploads.github.com/repos/" + GH_REPO + "/actions/runs/" + run_id + "/artifacts?name=mkv-room-" + room]
-        result = subprocess.run(cmd, capture_output=True, timeout=300)
-        if result.returncode == 0:
-            try:
-                resp = json.loads(result.stdout)
-                log("  Upload OK! id=" + str(resp.get("id", "?")))
-            except:
-                log("  Upload OK (no id)")
-        else:
-            log("  Upload FAILED: " + result.stderr.decode()[:200])
+
 
     # Delete Release assets after upload succeeds
     if os.path.exists(path):
