@@ -306,6 +306,12 @@ def main():
         timezone_id='Asia/Bangkok',
     )
     context.add_cookies(cookie_dict)
+    # Verify cookies
+    ck = context.cookies()
+    session = [c for c in ck if c['name'] in ('sessionid','sid_tt','__ac_nonce')]
+    log('Set cookies: ' + str(len(session)) + ' key cookies')
+    for c in session:
+        log('  ' + c['name'] + '=' + c['value'][:8] + ' domain=' + c.get('domain','?'))
     page = context.new_page()
     page.on('response', _on_api_response)
 
