@@ -42,13 +42,7 @@ for room_id in manifest:
     if os.path.exists(path):
         print(f'{room_id}|{path}')
 "
-      - name: Upload MKV Artifacts per room
-        uses: actions/upload-artifact@v4
-        with:
-          name: mkv-room-${{ matrix.room }}
-          path: /tmp/mkv_work/${{ matrix.room }}/*_merged.mkv
-          retention-days: 90
-        # Actually we can't easily use matrix here, let's do a simpler approach
+      - name: Upload all merged MKVs as artifacts
       - name: Upload all merged MKVs as artifacts
         uses: actions/upload-artifact@v4
         with:
