@@ -106,7 +106,7 @@ for key, session in sessions.items():
         log("  Uploading " + str(round(fsize/1024/1024)) + " MB as mkv-room-" + room + "...")
         import subprocess as _sp
         _cmd = [
-            "curl", "-s", "-L", "-X", "POST",
+            "curl", "-s", "-L", "-X", "POST", "--fail",
             "-H", "Authorization: Bearer " + gh_token,
             "-F", "name=mkv-room-" + room + "-" + start_ts.replace("_", "-"),
             "-F", "file=@" + merged_path,
