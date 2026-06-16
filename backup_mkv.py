@@ -124,4 +124,16 @@ for key in sessions:
     if os.path.exists(path):
         log("  " + merged + " (" + str(round(os.path.getsize(path)/1024/1024)) + " MB)")
 
+# Upload per-room artifact using GH CLI
+for key in sessions:
+    room = sessions[key]["room"]
+    start_ts = sessions[key]["start_ts"]
+    merged = room + "_" + start_ts + "_merged.mkv"
+    path = os.path.join(WORK_DIR, room + "_" + start_ts, merged)
+    if os.path.exists(path):
+        log("Uploading artifact for " + room + "...")
+        cmd = "gh api /repos/" + GH_REPO + "/actions/runs/${{ GITHUB_RUN_ID }}/artifacts -X POST -f name=mkv-room-" + room + " -F file=@" + path
+        result = os.system(cmd)
+        log("  Upload " + ("OK" if result == 0 else "FAILED"))
+
 log("Manifest saved. Done!")
