@@ -1,0 +1,53 @@
+name: Backup MKV to Artifact
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date filter (YYYYMMDD, e.g. 20260615)'
+        required: true
+env:
+  PYTHON_VERSION: '3.11'
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ffmpeg
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/azure-cli.list 2>/dev/null || true
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq ffmpeg || true
+          ffmpeg -version | head -1
+
+      - name: Download and merge
+        run: python backup_mkv.py ${{ github.event.inputs.date }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+
+      - name: Install @actions/artifact
+        run: npm install @actions/artifact
+
+      - name: Upload per-room artifacts
+        run: node upload_rooms.js
+
+      - name: Cleanup Release assets
+        run: python cleanup_release.py ${{ github.event.inputs.date }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+
+      - name: Update manifest
+        run: python update_manifest.py
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
