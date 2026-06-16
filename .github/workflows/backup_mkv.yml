@@ -54,6 +54,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install ffmpeg
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/azure-cli.list 2>/dev/null || true
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq ffmpeg || true
+          ffmpeg -version | head -1
       - name: Download and concat
         run: python download_room.py ${{ github.event.inputs.date }} ${{ matrix.room.key }} ${{ matrix.room.start_ts }}
         env:
