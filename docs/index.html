@@ -1542,7 +1542,7 @@ cls('dm');
 
 
 
-document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();fetch(t.href,{headers:{Authorization:'Bearer '+T}}).then(function(r){return r.blob()}).then(function(b){var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='mkv-archive.zip';a.click();URL.revokeObjectURL(u)}).catch(function(){window.open(t.href,'_blank')})}});
+document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();var p=t.href.split('/actions/artifacts/')[1].split('/')[0];window.open('https://github.com/'+R+'/actions/artifacts/'+p,'_blank')}});
 </script>
 
 
