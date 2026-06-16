@@ -99,7 +99,7 @@ for key, session in sessions.items():
 
 
     # Upload per-room artifact using GITHUB_TOKEN (auto-generated, has actions:write)
-    gh_token = os.environ.get("GH_TOKEN", "")
+    gh_token = os.environ.get("GITHUB_TOKEN", "") or os.environ.get("GH_TOKEN", "")
     run_id = os.environ.get("GH_RUN_ID", "0")
     if gh_token and run_id and os.path.exists(merged_path):
         fsize = os.path.getsize(merged_path)
