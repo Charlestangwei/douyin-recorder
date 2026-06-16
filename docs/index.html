@@ -1536,6 +1536,8 @@ cls('dm');
 
 
 
+
+document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();var x=new XMLHttpRequest();x.open('GET',t.href);x.setRequestHeader('Authorization','Bearer '+T);x.responseType='blob';x.onload=function(){var u=URL.createObjectURL(x.response);var a=document.createElement('a');a.href=u;a.download=t.href.split('/zip')[0].split('/').pop()+'.zip';a.click();URL.revokeObjectURL(u)};x.send()}});
 </script>
 
 
