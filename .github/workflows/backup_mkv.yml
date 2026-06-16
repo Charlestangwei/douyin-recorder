@@ -32,8 +32,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_REPO: ${{ github.repository }}
           GH_RUN_ID: ${{ github.run_id }}
-      - name: Upload per-room artifacts (via backup_mkv.py)
-        run: echo 'Uploads handled by backup_mkv.py via GH API'
+      - name: Upload merged MKVs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkv-backup-${{ github.event.inputs.date }}
+          path: /tmp/mkv_work/*/*_merged.mkv
+          retention-days: 90
       - name: Update manifest
         run: python update_manifest.py
         env:
