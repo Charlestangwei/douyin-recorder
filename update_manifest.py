@@ -51,4 +51,5 @@ req = urllib.request.Request(API + "/contents/docs/manifest.json", data=body, he
 urllib.request.urlopen(req, timeout=15)
 print("manifest.json updated!")
 print("Rooms: " + str(list(backup_manifest.keys())))
-print("Artifact ID: " + str(backup_manifest.get(list(backup_manifest.keys())[0], {}).get("artifact_id", "N/A")))
+if backup_manifest:
+    print("Artifact ID: ok")
