@@ -175,105 +175,27 @@ def _on_api_response(response):
 
 
 def search_keyword(page, keyword, pending_map):
-    """搜索关键词，返回达标数据 [(sid, nick, uc, total, reason, is_new), ...]
-       is_new=True → 尚未在pending中; is_new=False → 已存在但数据变高了"""
-    search_url = f"https://www.douyin.com/search/{quote(keyword)}?type=live"
-    log(f"搜索: {keyword}")
-    _api_buffer.clear()
-
+    log("搜索: " + keyword)
+    api_url = "https://www.douyin.com/aweme/v1/web/live/search/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_live&keyword=" + quote(keyword)
     try:
-        page.goto(search_url, wait_until='domcontentloaded', timeout=30000)
+        page.goto(api_url, wait_until='domcontentloaded', timeout=30000)
     except:
         pass
-    page.wait_for_timeout(12000)
-
-    if not _api_buffer:
-        log("  API未返回，按Enter触发...")
-        try:
-            inp = page.query_selector('input')
-            if inp and not inp.get_attribute('disabled'):
-                inp.focus()
-                page.keyboard.press('Enter')
-                page.wait_for_timeout(10000)
-        except:
-            pass
-
-    if not _api_buffer:
-        log("  API仍未返回，reload...")
-        try:
-            page.reload(wait_until='domcontentloaded')
-            page.wait_for_timeout(12000)
-        except:
-            pass
-
-    log(f"  捕获API响应: {len(_api_buffer)}次")
-
-    results = []  # [(sid, nick, uc, total, reason, is_new)]
-    seen = set()
-    for data in _api_buffer:
-        for item in data.get('data', []):
-            if 'lives' not in item:
-                continue
-            a = item['lives'].get('author', {})
-            sid = a.get('short_id', '')
-            if not sid or not sid.isdigit():
-                continue
-            if sid in seen:
-                continue
-            seen.add(sid)
-
-            nick = a.get('nickname', '').strip()
-            raw = item['lives'].get('rawdata', '{}')
-            uc = 0
-            total = 0
-            try:
-                rd = json.loads(raw) if isinstance(raw, str) else raw
-                uc = int(rd.get('user_count', 0))
-                total = int(rd.get('stats', {}).get('total_user', 0))
-            except:
-                pass
-
-            is_new = sid not in pending_map
-
-            if is_new:
-                # 全新房间 - 判断是否达标
-                reasons = []
-                if uc >= MIN_ONLINE:
-                    reasons.append(f"在线>={MIN_ONLINE}")
-                if total >= MIN_TOTAL:
-                    reasons.append(f"累计>={MIN_TOTAL}")
-                if reasons:
-                    reason_str = "+".join(reasons)
-                    results.append((sid, nick, uc, total, reason_str, True))
-                    log(f"  ✓ {sid} {nick}: 在线={uc} 累计={total} -> {reason_str} (新增)")
-                else:
-                    log(f"  ✗ {sid} {nick}: 在线={uc} 累计={total} (未达标, 跳过)")
-            else:
-                # 已有房间 - 比较取最高值
-                old = pending_map[sid]
-                max_online = max(uc, old['online'])
-                max_total = max(total, old['total'])
-                updated = (max_online > old['online'] or max_total > old['total'])
-                still_qualifies = (max_online >= MIN_ONLINE or max_total >= MIN_TOTAL)
-
-                if updated and still_qualifies:
-                    reasons = []
-                    if max_online >= MIN_ONLINE:
-                        reasons.append(f"在线>={MIN_ONLINE}")
-                    if max_total >= MIN_TOTAL:
-                        reasons.append(f"累计>={MIN_TOTAL}")
-                    reason_str = "+".join(reasons)
-                    results.append((sid, nick, max_online, max_total, reason_str, False))
-                    log(f"  ★ {sid} {nick}: 在线={uc}(旧={old['online']}) 累计={total}(旧={old['total']}) -> 更新为{max_online}/{max_total}")
-                elif not still_qualifies:
-                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} (原记录已存在但不达标数据，跳过)")
-                else:
-                    log(f"  ◇ {sid} {nick}: 在线={uc} 累计={total} (数据未变高，跳过)")
-
-    log(f"  关键词'{keyword}': 去重后{len(seen)}个房间, {len(results)}个需写入")
-    return results
-
-
+    page.wait_for_timeout(3000)
+    data_list = []
+    try:
+        js = "fetch('" + api_url + "').then(r=>r.json()).then(d=>JSON.stringify({s:d.status_code,n:(d.data||[]).length}))"
+        result = page.evaluate(js)
+        parsed = json.loads(result)
+        if parsed["s"] == 0 and parsed["n"] > 0:
+            log("  API返回: " + str(parsed["n"]) + "条")
+            js2 = "fetch('" + api_url + "').then(r=>r.json()).then(d=>JSON.stringify(d.data))"
+            raw = page.evaluate(js2)
+            data_list = json.loads(raw)
+        else:
+            log("  API返回: status=" + str(parsed["s"]) + ", 0条")
+    except Exception as e:
+        log("  API调用失败: " + str(e))
 def main():
     if not DOUYIN_COOKIE:
         log("缺少DOUYIN_COOKIE，终止")
