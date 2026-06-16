@@ -156,6 +156,33 @@ for key in sessions:
         log("  Uploading " + str(round(fsize/1024/1024)) + " MB via curl...")
 
 
+
+    # Upload per-room merged MKV via GitHub Artifacts API
+    run_id = os.environ.get("GH_RUN_ID", "0")
+    if run_id and GH_TOKEN and os.path.exists(merged_path):
+        fsize = os.path.getsize(merged_path)
+        log("  Uploading " + str(round(fsize/1024/1024)) + " MB to Artifact API...")
+        import subprocess as _sp
+        room_name = room
+        _cmd = [
+            "curl", "-s", "-L", "-X", "POST",
+            "-H", "Authorization: Bearer " + GH_TOKEN,
+            "-F", "name=mkv-room-" + room_name,
+            "-F", "file=@" + merged_path,
+            "https://uploads.github.com/repos/" + GH_REPO + "/actions/runs/" + run_id + "/artifacts"
+        ]
+        _r = _sp.run(_cmd, capture_output=True, timeout=600)
+        if _r.returncode == 0 and _r.stdout:
+            try:
+                _j = json.loads(_r.stdout)
+                log("  Artifact OK! id=" + str(_j.get("id", "?")) + " name=" + str(_j.get("name", "?")))
+            except:
+                log("  Artifact uploaded: " + _r.stdout.decode()[:100])
+        else:
+            err = _r.stderr.decode()[:200] if _r.stderr else "no stderr"
+            log("  Artifact FAILED: " + err)
+
+
     # Delete Release assets after upload succeeds
     if os.path.exists(path):
         for s in segs:
