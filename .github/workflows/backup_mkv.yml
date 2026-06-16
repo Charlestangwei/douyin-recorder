@@ -1,0 +1,89 @@
+name: Backup MKV to Artifact
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date filter (YYYYMMDD, e.g. 20260529)'
+        required: true
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run backup script
+        run: python backup_mkv.py ${{ github.event.inputs.date }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+
+      - name: Upload MKV to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkv-backup-${{ github.event.inputs.date }}
+          path: /tmp/mkv_input/*.mkv
+          retention-days: 90
+
+      - name: Upload manifest & update frontend
+        run: |
+          # Download current index.html
+          python3 -c "
+import json, urllib.request, base64
+token = '${{ secrets.GH_TOKEN }}'
+headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json'}
+api = f'https://api.github.com/repos/${{ github.repository }}'
+
+# Get the manifest we just created
+with open('/tmp/mkv_input/manifest.json') as f:
+    backup_manifest = json.load(f)
+
+# Try to download existing manifest from repo
+try:
+    req = urllib.request.Request(api + '/contents/docs/manifest.json', headers=headers)
+    resp = urllib.request.urlopen(req, timeout=15)
+    data = json.loads(resp.read())
+    existing = json.loads(base64.b64decode(data['content']).decode('utf-8'))
+    existing_sha = data['sha']
+except:
+    existing = {}
+    existing_sha = None
+
+# Merge
+existing.update(backup_manifest)
+merged = json.dumps(existing, indent=2, ensure_ascii=False)
+
+if existing_sha:
+    # Update
+    url = api + '/contents/docs/manifest.json'
+    body = json.dumps({
+        'message': f'backup manifest: {list(backup_manifest.keys())}',
+        'content': base64.b64encode(merged.encode()).decode(),
+        'sha': existing_sha,
+        'branch': 'main'
+    }).encode()
+    req = urllib.request.Request(url, data=body, headers={**headers, 'Content-Type': 'application/json'}, method='PUT')
+    urllib.request.urlopen(req, timeout=15)
+else:
+    # Create
+    url = api + '/contents/docs/manifest.json'
+    body = json.dumps({
+        'message': 'init manifest.json for mkv artifact backup',
+        'content': base64.b64encode(merged.encode()).decode(),
+        'branch': 'main'
+    }).encode()
+    req = urllib.request.Request(url, data=body, headers={**headers, 'Content-Type': 'application/json'}, method='PUT')
+    urllib.request.urlopen(req, timeout=15)
+print('manifest.json updated!')
+"
