@@ -40,3 +40,4 @@
 3596366115 = 果哥游南越(中越夫妻） | online=10309 | total_user=99658 | 在线>=10000 | keyword=越南
 47218825394 = 漂流瓶的海外生活 | online=8327 | total_user=119685 | 累计>=100000 | keyword=日本
 1707621089 = 鸿程出国 | online=1102 | total_user=173714 | 累计>=100000 | keyword=美国
+78767428745 = 78767428745 | online=0 | total_user=0 | 0 | keyword=日本
