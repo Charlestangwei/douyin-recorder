@@ -28,18 +28,38 @@ def get_mkv_assets(date_str):
             break
     return items
 
-log("Scanning " + DATE + " Release assets to delete...")
-assets = get_mkv_assets(DATE)
-log("Found " + str(len(assets)) + " MKV assets to delete")
-
-ok = 0
-for a in assets:
+# Verify upload succeeded by checking manifest for artifact_ids
+manifest_path = "/tmp/mkv_work/manifest.json"
+should_delete = False
+if os.path.exists(manifest_path):
     try:
-        dreq = urllib.request.Request(API + "/releases/assets/" + str(a["asset_id"]), headers=HEADERS, method="DELETE")
-        urllib.request.urlopen(dreq, timeout=30)
-        log("  Deleted " + a["name"])
-        ok += 1
+        with open(manifest_path) as f:
+            m = json.load(f)
+        has_artifact = any(v.get("artifact_id") for v in m.values())
+        if has_artifact:
+            should_delete = True
+            log("Upload verified: artifact_ids found in manifest")
+        else:
+            log("SKIP delete: no artifact_ids in manifest (upload may have failed)")
     except Exception as e:
-        log("  FAILED " + a["name"])
+        log("SKIP delete: manifest check error: " + str(e))
+else:
+    log("SKIP delete: no manifest.json found (nothing was processed)")
 
-log("Deleted " + str(ok) + "/" + str(len(assets)) + " assets. Done!")
+if should_delete:
+    log("Scanning " + DATE + " Release assets to delete...")
+    assets = get_mkv_assets(DATE)
+    log("Found " + str(len(assets)) + " MKV assets to delete")
+    ok = 0
+    for a in assets:
+        try:
+            dreq = urllib.request.Request(API + "/releases/assets/" + str(a["asset_id"]), headers=HEADERS, method="DELETE")
+            urllib.request.urlopen(dreq, timeout=30)
+            log("  Deleted " + a["name"])
+            ok += 1
+        except Exception as e:
+            log("  FAILED " + a["name"])
+    log("Deleted " + str(ok) + "/" + str(len(assets)) + " assets")
+else:
+    log("No assets deleted (upload verification failed)")
+log("Done!")
