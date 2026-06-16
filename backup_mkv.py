@@ -98,6 +98,33 @@ for key, session in sessions.items():
                      "segments": len(segs), "backup_date": time.strftime("%Y-%m-%d")}
 
 
+    # Upload per-room artifact using GITHUB_TOKEN (auto-generated, has actions:write)
+    gh_token = os.environ.get("GH_TOKEN", "")
+    run_id = os.environ.get("GH_RUN_ID", "0")
+    if gh_token and run_id and os.path.exists(merged_path):
+        fsize = os.path.getsize(merged_path)
+        log("  Uploading " + str(round(fsize/1024/1024)) + " MB as mkv-room-" + room + "...")
+        import subprocess as _sp
+        _cmd = [
+            "curl", "-s", "-L", "-X", "POST",
+            "-H", "Authorization: Bearer " + gh_token,
+            "-F", "name=mkv-room-" + room + "-" + start_ts.replace("_", "-"),
+            "-F", "file=@" + merged_path,
+            "https://uploads.github.com/repos/" + GH_REPO + "/actions/runs/" + run_id + "/artifacts"
+        ]
+        _r = _sp.run(_cmd, capture_output=True, timeout=600)
+        if _r.returncode == 0 and _r.stdout:
+            try:
+                _j = json.loads(_r.stdout)
+                log("  Upload OK! artifact_id=" + str(_j.get("id", "?")))
+                manifest[key]["artifact_id"] = _j.get("id")
+                manifest[key]["run_id"] = run_id
+            except:
+                log("  Upload response: " + _r.stdout.decode()[:100])
+        else:
+            err = _r.stderr.decode()[:200] if _r.stderr else "no output"
+            log("  Upload FAILED: " + err)
+
 with open(os.path.join(WORK_DIR, "manifest.json"), "w", encoding="utf-8") as f:
     json.dump(manifest, f, indent=2, ensure_ascii=False)
 
