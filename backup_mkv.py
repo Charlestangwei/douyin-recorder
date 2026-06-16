@@ -132,7 +132,9 @@ for key in sessions:
     path = os.path.join(WORK_DIR, room + "_" + start_ts, merged)
     if os.path.exists(path):
         log("Uploading artifact for " + room + "...")
-        cmd = "gh api /repos/" + GH_REPO + "/actions/runs/${{ GITHUB_RUN_ID }}/artifacts -X POST -f name=mkv-room-" + room + " -F file=@" + path
+        import os as _os
+        run_id = os.environ.get("GH_RUN_ID", "0")
+        cmd = "gh api /repos/" + GH_REPO + "/actions/runs/" + run_id + "/artifacts -X POST -f name=mkv-room-" + room + " -F file=@" + path
         result = os.system(cmd)
         log("  Upload " + ("OK" if result == 0 else "FAILED"))
 
