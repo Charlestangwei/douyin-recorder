@@ -22,34 +22,22 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install ffmpeg
         run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/azure-cli.list 2>/dev/null || true
           sudo apt-get update -qq || true
           sudo apt-get install -y -qq ffmpeg || true
           ffmpeg -version | head -1
-      - name: Run backup & merge script
+      - name: Run backup & merge
         run: python backup_mkv.py ${{ github.event.inputs.date }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_REPO: ${{ github.repository }}
-      - name: Upload per-room merged MKVs
-        run: |
-          python3 -c "
-import json, os
-with open('/tmp/mkv_work/manifest.json') as f:
-    manifest = json.load(f)
-for room_id in manifest:
-    merged_file = manifest[room_id].get('merged_file', '')
-    path = f'/tmp/mkv_work/{room_id}/{merged_file}'
-    if os.path.exists(path):
-        print(f'{room_id}|{path}')
-"
-      - name: Upload all merged MKVs as artifacts
-      - name: Upload all merged MKVs as artifacts
+      - name: Upload merged MKVs
         uses: actions/upload-artifact@v4
         with:
           name: mkv-backup-${{ github.event.inputs.date }}
           path: /tmp/mkv_work/*/*_merged.mkv
           retention-days: 90
-      - name: Update manifest.json
+      - name: Update manifest
         run: python update_manifest.py
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
