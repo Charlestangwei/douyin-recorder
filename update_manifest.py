@@ -15,11 +15,11 @@ try:
     DATE = list(backup_manifest.values())[0]["date"] if backup_manifest else ""
     for a in arts:
         aname = a["name"]
-        if aname.startswith("mkv-room-"):
-            room = aname[9:]
-            if room in backup_manifest:
-                backup_manifest[room]["artifact_id"] = a["id"]
-                backup_manifest[room]["expires"] = a["expires_at"][:10]
+        if a["name"] == "mkv-backup-" + DATE:
+            for room_id in backup_manifest:
+                backup_manifest[room_id]["artifact_id"] = a["id"]
+                backup_manifest[room_id]["expires"] = a["expires_at"][:10]
+            break
 except Exception as e:
     print("Artifact lookup: " + str(e))
 
