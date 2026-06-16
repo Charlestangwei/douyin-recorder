@@ -33,6 +33,12 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_RUN_ID: ${{ github.run_id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload merged MKVs (fallback: bulk zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkv-backup-${{ github.event.inputs.date }}
+          path: /tmp/mkv_work/*/*_merged.mkv
+          retention-days: 90
       - name: Cleanup Release assets
         run: python cleanup_release.py ${{ github.event.inputs.date }}
         env:
