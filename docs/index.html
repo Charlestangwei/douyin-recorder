@@ -732,7 +732,7 @@ async function lo(){
 
 
 
-    try{var _r=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/manifest.json?_='+Date.now());if(_r.ok){var _m=JSON.parse(await _r.text());for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
+    try{var _r=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/manifest.json?_='+Date.now());if(_r.ok){var _m=JSON.parse(await _r.text());for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
 
 
 
@@ -749,7 +749,7 @@ async function lo(){
 
 
     // Load manifest for artifact MKVs
-    try{var _r=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/manifest.json?_='+Date.now());if(_r.ok){var _m=JSON.parse(await _r.text());for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
+    try{var _r=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/manifest.json?_='+Date.now());if(_r.ok){var _m=JSON.parse(await _r.text());for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
 
 
 
@@ -1542,7 +1542,7 @@ cls('dm');
 
 
 
-document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();var x=new XMLHttpRequest();x.open('GET',t.href);x.setRequestHeader('Authorization','Bearer '+T);x.responseType='blob';x.onload=function(){var u=URL.createObjectURL(x.response);var a=document.createElement('a');a.href=u;a.download=t.href.split('/zip')[0].split('/').pop()+'.zip';a.click();URL.revokeObjectURL(u)};x.send()}});
+document.addEventListener('click',function(e){var t=e.target;while(t&&t.tagName!=='A')t=t.parentNode;if(t&&t.href&&t.href.indexOf('/actions/artifacts/')>0){e.preventDefault();fetch(t.href,{headers:{Authorization:'Bearer '+T}}).then(function(r){return r.blob()}).then(function(b){var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='mkv-archive.zip';a.click();URL.revokeObjectURL(u)}).catch(function(){window.open(t.href,'_blank')})}});
 </script>
 
 
