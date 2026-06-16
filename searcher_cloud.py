@@ -175,42 +175,24 @@ def _on_api_response(response):
 
 
 def search_keyword(page, keyword, pending_map):
-    log("\u641c\u7d22: " + keyword)
-    results = []
-    api_url = "https://www.douyin.com/aweme/v1/web/live/search/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_live&keyword=" + quote(keyword)
+    log("搜索: " + keyword)
+    search_url = "https://www.douyin.com/search/" + quote(keyword) + "?type=live"
     try:
-        page.goto(api_url, wait_until='domcontentloaded', timeout=30000)
+        page.goto(search_url, wait_until="networkidle", timeout=60000)
     except:
         pass
-    page.wait_for_timeout(3000)
+    page.wait_for_timeout(15000)
+    results = []
     try:
-        js = "fetch('" + api_url + "').then(r=>r.json()).then(d=>JSON.stringify(d))"
+        room_ids = []
+        js = r'var a=document.querySelectorAll("a[href*=\"live.douyin.com/\"]");var s={};var o=[];a.forEach(function(e){var m=e.href.match(/live\\.douyin\\.com\\/(\\d+)/);if(m&&!s[m[1]]){s[m[1]]=1;o.push(m[1])}});JSON.stringify(o)'
         raw = page.evaluate(js)
-        data = json.loads(raw)
-        if data.get("status_code") == 0:
-            items = data.get("data") or []
-            log("  API\u8fd4\u56de: " + str(len(items)) + "\u6761")
-            for item in items:
-                try:
-                    room = item.get("room", {}) or {}
-                    user = item.get("user", {}) or {}
-                    stats = item.get("stats", {}) or {}
-                    sid = room.get("room_id_str", "") or str(room.get("id", ""))
-                    nick = user.get("nickname", "")
-                    uc = stats.get("user_count", 0) or 0
-                    total = stats.get("total_user", 0) or 0
-                    reason = 0
-                    pk = room.get("id_str", "") or sid
-                    is_new = pk not in pending_map
-                    results.append((sid, nick, uc, total, reason, is_new))
-                    if is_new:
-                        log("  \u65b0: " + nick + " " + sid + " uc=" + str(uc))
-                except Exception as e2:
-                    pass
-        else:
-            log("  API\u8fd4\u56de: status=" + str(data.get("status_code", -1)) + ", 0\u6761")
+        room_ids = json.loads(raw)
+        log("  发现: " + str(len(room_ids)) + " 个房间")
+        for sid in room_ids:
+            results.append((sid, sid, 0, 0, 0, sid not in pending_map))
     except Exception as e:
-        log("  API\u8c03\u7528\u5931\u8d25: " + str(e))
+        log("  失败: " + str(e))
     return results
 def main():
     if not DOUYIN_COOKIE:
