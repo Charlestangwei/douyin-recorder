@@ -31,6 +31,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          GH_RUN_ID: ${{ github.run_id }}
       - name: Upload per-room artifacts (via backup_mkv.py)
         run: echo 'Uploads handled by backup_mkv.py via GH API'
       - name: Update manifest
@@ -38,3 +39,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          GH_RUN_ID: ${{ github.run_id }}
