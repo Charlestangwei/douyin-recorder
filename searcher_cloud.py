@@ -294,24 +294,13 @@ def main():
     pw = sync_playwright().start()
     browser = pw.chromium.launch(
         headless=True,
-        args=[
-            '--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu',
-            '--disable-blink-features=AutomationControlled',
-        ],
+        args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
     )
     context = browser.new_context(
         viewport={'width': 1920, 'height': 1080},
-        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        locale='zh-CN',
-        timezone_id='Asia/Bangkok',
+        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
     )
     context.add_cookies(cookie_dict)
-    # Verify cookies
-    ck = context.cookies()
-    session = [c for c in ck if c['name'] in ('sessionid','sid_tt','__ac_nonce')]
-    log('Set cookies: ' + str(len(session)) + ' key cookies')
-    for c in session:
-        log('  ' + c['name'] + '=' + c['value'][:8] + ' domain=' + c.get('domain','?'))
     page = context.new_page()
     page.on('response', _on_api_response)
 
