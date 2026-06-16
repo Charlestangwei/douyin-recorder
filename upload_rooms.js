@@ -2,12 +2,10 @@ const fs = require('fs');
 
 async function main() {
   console.log('upload_rooms.js started');
-  console.log('CWD: ' + process.cwd());
-  console.log('Manifest exists: ' + fs.existsSync('/tmp/mkv_work/manifest.json'));
 
   const manifestPath = '/tmp/mkv_work/manifest.json';
   if (!fs.existsSync(manifestPath)) {
-    console.log('No manifest found');
+    console.log('No manifest found at ' + manifestPath);
     return;
   }
 
@@ -20,36 +18,47 @@ async function main() {
     return;
   }
 
+  // Load @actions/artifact - try both export names
   console.log('Loading @actions/artifact...');
-  let UploadArtifact;
+  let artifactClient;
   try {
     const mod = await import('@actions/artifact');
-    UploadArtifact = mod.UploadArtifact;
-    console.log('Loaded UploadArtifact: ' + (typeof UploadArtifact));
+    console.log('Module exports: ' + Object.keys(mod).join(', '));
+    if (typeof mod.DefaultArtifactClient === 'function') {
+      artifactClient = new mod.DefaultArtifactClient();
+      console.log('Using DefaultArtifactClient');
+    } else if (typeof mod.UploadArtifact === 'function') {
+      artifactClient = new mod.UploadArtifact();
+      console.log('Using UploadArtifact');
+    } else if (typeof mod.ArtifactClient === 'function') {
+      artifactClient = new mod.ArtifactClient();
+      console.log('Using ArtifactClient');
+    } else {
+      console.log('No known class found, trying module itself');
+      for (var k of Object.keys(mod)) {
+        console.log('  ' + k + ': ' + typeof mod[k]);
+      }
+      process.exit(1);
+    }
   } catch (e) {
     console.log('IMPORT ERROR: ' + e.message);
-    console.log('Stack: ' + e.stack);
     process.exit(1);
   }
 
   for (const key of keys) {
     const entry = manifest[key];
     const filePath = '/tmp/mkv_work/' + key + '/' + entry.merged_file;
-    console.log('  File exists: ' + key + ' -> ' + fs.existsSync(filePath) + ' (' + filePath + ')');
+    const exists = fs.existsSync(filePath);
+    console.log('  [' + key + '] exists=' + exists + ' path=' + filePath);
 
-    if (!fs.existsSync(filePath)) {
-      console.log('  SKIP ' + key + ': file not found');
-      continue;
-    }
+    if (!exists) continue;
 
     const artName = 'mkv-room-' + key;
     const sizeMB = Math.round(fs.statSync(filePath).size / 1024 / 1024);
-    console.log('  Uploading ' + key + ' (' + sizeMB + ' MB)');
+    console.log('  Uploading ' + key + ' (' + sizeMB + ' MB) as ' + artName);
 
     try {
-      const uploader = new UploadArtifact();
-      console.log('  Uploader created, calling uploadArtifact...');
-      const result = await uploader.uploadArtifact(artName, [filePath], {
+      const result = await artifactClient.uploadArtifact(artName, [filePath], {
         retentionDays: 90
       });
       console.log('  OK id=' + result.id + ' size=' + result.size);
@@ -61,11 +70,10 @@ async function main() {
   }
 
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-  console.log('Manifest saved with artifact IDs');
+  console.log('Manifest saved');
 }
 
 main().catch(function(e) {
   console.error('FATAL: ' + e.message);
-  console.error(e.stack);
   process.exit(1);
 });
