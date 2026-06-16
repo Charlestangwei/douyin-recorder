@@ -86,7 +86,9 @@
     "merged_file": "A8888288889_20260612_120823_merged.mkv",
     "segments": 6,
     "backup_date": "2026-06-16",
-    "artifact_id": null
+    "artifact_id": 7669804731,
+    "run_id": 27624257069,
+    "expires": "2026-09-14T14:19:33Z"
   },
   "A8888288889_20260612_112128": {
     "room": "A8888288889",
@@ -95,7 +97,9 @@
     "merged_file": "A8888288889_20260612_112128_merged.mkv",
     "segments": 3,
     "backup_date": "2026-06-16",
-    "artifact_id": null
+    "artifact_id": 7669797851,
+    "run_id": 27624257069,
+    "expires": "2026-09-14T14:19:33Z"
   },
   "A8888288889_20260612_111849": {
     "room": "A8888288889",
@@ -104,7 +108,9 @@
     "merged_file": "A8888288889_20260612_111849_merged.mkv",
     "segments": 1,
     "backup_date": "2026-06-16",
-    "artifact_id": null
+    "artifact_id": 7669847047,
+    "run_id": 27624257069,
+    "expires": "2026-09-14T14:19:33Z"
   },
   "A8888288889_20260612_111239": {
     "room": "A8888288889",
@@ -113,7 +119,9 @@
     "merged_file": "A8888288889_20260612_111239_merged.mkv",
     "segments": 1,
     "backup_date": "2026-06-16",
-    "artifact_id": null
+    "artifact_id": 7669832249,
+    "run_id": 27624257069,
+    "expires": "2026-09-14T14:19:33Z"
   },
   "A8888288889_20260612_110113": {
     "room": "A8888288889",
@@ -122,7 +130,9 @@
     "merged_file": "A8888288889_20260612_110113_merged.mkv",
     "segments": 1,
     "backup_date": "2026-06-16",
-    "artifact_id": null
+    "artifact_id": 7669859716,
+    "run_id": 27624257069,
+    "expires": "2026-09-14T14:19:33Z"
   },
   "A8888288889_20260612_104332": {
     "room": "A8888288889",
@@ -131,7 +141,9 @@
     "merged_file": "A8888288889_20260612_104332_merged.mkv",
     "segments": 2,
     "backup_date": "2026-06-16",
-    "artifact_id": null
+    "artifact_id": 7669944987,
+    "run_id": 27624257069,
+    "expires": "2026-09-14T14:19:33Z"
   },
   "961019695933_20260612_073157": {
     "room": "961019695933",
