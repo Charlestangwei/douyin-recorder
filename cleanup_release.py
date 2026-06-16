@@ -28,23 +28,18 @@ def get_mkv_assets(date_str):
             break
     return items
 
-# Verify upload succeeded by checking manifest for artifact_ids
-manifest_path = "/tmp/mkv_work/manifest.json"
+# Verify upload by checking if mkv-room artifacts exist for this date
 should_delete = False
-if os.path.exists(manifest_path):
-    try:
-        with open(manifest_path) as f:
-            m = json.load(f)
-        has_artifact = any(v.get("artifact_id") for v in m.values())
-        if has_artifact:
+try:
+    url = API + "/actions/artifacts?per_page=50"
+    arts = json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=15).read()).get("artifacts", [])
+    for a in arts:
+        if a["name"].startswith("mkv-room-") and DATE in a["name"]:
             should_delete = True
-            log("Upload verified: artifact_ids found in manifest")
-        else:
-            log("SKIP delete: no artifact_ids in manifest (upload may have failed)")
-    except Exception as e:
-        log("SKIP delete: manifest check error: " + str(e))
-else:
-    log("SKIP delete: no manifest.json found (nothing was processed)")
+            log("Upload verified: " + a["name"] + " exists")
+            break
+except Exception as e:
+    log("Artifact check error: " + str(e))
 
 if should_delete:
     log("Scanning " + DATE + " Release assets to delete...")
@@ -61,5 +56,5 @@ if should_delete:
             log("  FAILED " + a["name"])
     log("Deleted " + str(ok) + "/" + str(len(assets)) + " assets")
 else:
-    log("No assets deleted (upload verification failed)")
+    log("No mkv-room artifacts found for " + DATE + " - skipping delete")
 log("Done!")
