@@ -16,20 +16,36 @@ def get_mkv_by_date(date_str):
     page = 1
     while True:
         url = API + "/releases?per_page=100&page=" + str(page)
-        req = urllib.request.Request(url, headers=HEADERS)
         try:
-            data = json.loads(urllib.request.urlopen(req, timeout=30).read())
+            data = json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=30).read())
             if not data:
                 break
             for r in data:
                 tag = r["tag_name"]
                 if date_str in tag and tag.endswith(".mkv"):
                     for a in r.get("assets", []):
-                        items.append({"tag": tag, "asset_id": a["id"], "name": a["name"], "dl_url": a["browser_download_url"], "room": tag.split("_")[0]})
+                        # Parse: room_start_seq.mkv
+                        parts = a["name"].split("_")
+                        room = parts[0]
+                        start_ts = parts[1] + "_" + parts[2] if len(parts) > 2 else parts[1]
+                        items.append({"tag": tag, "asset_id": a["id"], "name": a["name"], "dl_url": a["browser_download_url"], "room": room, "start_ts": start_ts})
             page += 1
         except:
             break
     return items
+
+def group_by_session(items):
+    """Group by room + start timestamp (same livestream session)"""
+    sessions = {}
+    for item in items:
+        key = item["room"] + "_" + item["start_ts"]
+        if key not in sessions:
+            sessions[key] = {"room": item["room"], "start_ts": item["start_ts"], "segs": []}
+        sessions[key]["segs"].append(item)
+    # Sort segments within each session by seq number
+    for key in sessions:
+        sessions[key]["segs"].sort(key=lambda x: x["name"])
+    return sessions
 
 def dl(url, dest):
     resp = urllib.request.urlopen(urllib.request.Request(url), timeout=600)
@@ -44,18 +60,17 @@ log("Scanning " + DATE + "...")
 items = get_mkv_by_date(DATE)
 log("Found " + str(len(items)) + " MKV files")
 
-rooms = {}
-for item in items:
-    rooms.setdefault(item["room"], []).append(item)
-for rid in rooms:
-    rooms[rid].sort(key=lambda x: x["name"])
-
-log("Rooms: " + str(list(rooms.keys())))
+sessions = group_by_session(items)
+log("Grouped into " + str(len(sessions)) + " sessions: " + str(list(sessions.keys())))
 
 manifest = {}
-for room_id, segs in rooms.items():
-    log("Processing " + room_id + ": " + str(len(segs)) + " segments")
-    rd = os.path.join(WORK_DIR, room_id)
+for key, session in sessions.items():
+    room = session["room"]
+    start_ts = session["start_ts"]
+    segs = session["segs"]
+    log("Processing " + key + ": " + str(len(segs)) + " segments")
+
+    rd = os.path.join(WORK_DIR, room + "_" + start_ts)
     os.makedirs(rd, exist_ok=True)
     dl_files = []
     for s in segs:
@@ -63,38 +78,50 @@ for room_id, segs in rooms.items():
         log("  DL " + s["name"] + "...")
         dl(s["dl_url"], fp)
         dl_files.append(fp)
-    
-    merged_name = room_id + "_" + DATE + "_merged.mkv"
+
+    merged_name = room + "_" + start_ts + "_merged.mkv"
     merged_path = os.path.join(rd, merged_name)
-    
-    # Concat
-    cl = os.path.join(WORK_DIR, "concat_" + room_id + ".txt")
+
+    cl = os.path.join(WORK_DIR, "concat_" + room + "_" + start_ts + ".txt")
     with open(cl, "w") as f:
         for fp in dl_files:
             f.write("file '" + fp + "'\n")
-    
-    log("  Merging -> " + merged_name)
+
+    log("  Merging -> " + merged_name + " (" + str(len(dl_files)) + " segments)")
     r = subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", cl, "-c", "copy", "-movflags", "+faststart", merged_path],
                        capture_output=True, timeout=3600)
-    ok = os.path.exists(merged_path)
-    log("  Merge " + ("OK" if ok else "FAILED") + " (" + str(os.path.getsize(merged_path)/1024/1024) + " MB)" if ok else "")
-    
-    manifest[room_id] = {
+    size_mb = os.path.getsize(merged_path) / 1024/1024 if os.path.exists(merged_path) else 0
+    log("  Merge OK (" + str(round(size_mb, 0)) + " MB)" if os.path.exists(merged_path) else "  Merge FAILED")
+
+    manifest[key] = {
+        "room": room,
         "date": DATE,
+        "start_ts": start_ts,
         "merged_file": merged_name,
         "segments": len(segs),
         "backup_date": time.strftime("%Y-%m-%d"),
         "artifact_id": None
     }
-    
+
     for s in segs:
         try:
             dreq = urllib.request.Request(API + "/releases/assets/" + str(s["asset_id"]), headers=HEADERS, method="DELETE")
             urllib.request.urlopen(dreq, timeout=30)
             log("  Deleted " + s["name"])
         except Exception as e:
-            log("  DEL FAIL " + s["name"] + ": " + str(e))
+            log("  DEL FAIL " + s["name"])
 
 with open(os.path.join(WORK_DIR, "manifest.json"), "w", encoding="utf-8") as f:
     json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+# Log artifact info for upload
+log("Artifact files:")
+for key in sessions:
+    room = sessions[key]["room"]
+    start_ts = sessions[key]["start_ts"]
+    merged = room + "_" + start_ts + "_merged.mkv"
+    path = os.path.join(WORK_DIR, room + "_" + start_ts, merged)
+    if os.path.exists(path):
+        log("  " + merged + " (" + str(round(os.path.getsize(path)/1024/1024)) + " MB)")
+
 log("Manifest saved. Done!")
