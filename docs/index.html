@@ -708,23 +708,9 @@ async function lo(){
 
 
 
-    var pa=1,rr=[];
-
-
-
-    while(true){
-
-
-
-      var res=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});
-
-
-
-      if(!res.ok)break;var da=await res.json();if(!da.length)break;rr=rr.concat(da);pa++;
-
-
-
-    }
+    var pa=1,rr=[];window.ALLDONE=false;var MAXP=parseInt(new URL(location.href).searchParams.get('pages'))||3;
+    async function ld(){for(var i=0;i<MAXP;i++){if(window.ALLDONE)break;var r=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});if(!r.ok){window.ALLDONE=true;break;}var d=await r.json();if(!d.length){window.ALLDONE=true;break;}rr=rr.concat(d);pa++;}}
+    await ld();
 
 
 
@@ -835,7 +821,7 @@ async function lo(){
 
 
 
-    bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}
+    bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='加载更多';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}
 
 
 
