@@ -717,7 +717,7 @@ async function reCalc(){
   window._cutoff=window._days[window._shownDays-1]||'';
 }
 async function reloadAll(){
-  if(window._cutoff)rr=rr.filter(function(r){return(r.created_at||'').slice(0,10)>=window._cutoff;});
+  // keep all rr data
   rs=rr.filter(function(r){return(r.assets&&r.assets.length)||(r.tag_name&&r.tag_name.indexOf('_meta.')>=0);});
   var nm={};rs.forEach(function(r){(r.body||'').split('\n').forEach(function(l){var i=l.indexOf('/');if(i>0&&i<l.length-1)nm[l.substring(i+1)]=l.substring(0,i)})});
   var mt={},mt_pv={},mt_tv={},mt_dt={};as=[];
