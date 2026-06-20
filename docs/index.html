@@ -824,11 +824,11 @@ async function lo(){
 
     if(window._cutoff)as=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!d||d>=window._cutoff;});
     bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
-    var mw=document.getElementById('moreWrap');
-    if(mw){
+    var grd=document.querySelector('.packages-grid');var mw=document.getElementById('moreWrap');
+    if(mw&&grd){
       var moreAvail=window._days&&window._days.length>window._shownDays;
-      mw.style.display=moreAvail?'block':'none';
-      mw.onclick=async function(){
+      if(moreAvail){grd.after(mw);mw.style.display='block';}else{mw.style.display='none';}
+      mw.onclick=async function(){try{
         if(window._moreLoading)return;window._moreLoading=true;
         mw.style.display='none';
         await ld(3);await ac();
@@ -844,7 +844,8 @@ async function lo(){
         bp(mt,mt_pv,mt_tv,mt_dt);rrb();
         window._moreLoading=false;
         var moreLeft=window._days&&window._days.length>window._shownDays;
-        mw.style.display=moreLeft?'block':'none';
+        if(moreLeft){var grd2=document.querySelector('.packages-grid');if(grd2)grd2.after(mw);mw.style.display='block';}else{mw.style.display='none';}
+      }catch(me){console.log('more err',me);window._moreLoading=false;mf();}
       };
     }
 
@@ -1556,7 +1557,7 @@ cls('dm');
 
 
 
-<div id='moreWrap' style='display:none;text-align:center;margin:24px 0'><button id='moreBtn' style='padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px'>\u52a0\u8f7d\u66f4\u591a</button></div>
+<div id='moreWrap' style='display:none;text-align:center;padding:12px 0'><button id='moreBtn' style='padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px'>加载更多</button></div>
 </body>
 
 
