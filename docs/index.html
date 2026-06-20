@@ -715,7 +715,7 @@ async function lo(){
       var dl=Object.keys(ds).sort().reverse(),sd=Math.min(loadedDays,dl.length);
       window._days=dl;window._shownDays=sd;window._cutoff=dl[sd-1]||'';
     }
-    loadedDays+=3;await ld(3);await ac();
+    await ld(3);await ac();
     if(window._days&&window._days.length<loadedDays)for(var t=0;t<5&&window._days.length<loadedDays;t++){await ld(3);await ac();}
 
 
@@ -831,7 +831,7 @@ async function lo(){
       mw.onclick=async function(){try{
         if(window._moreLoading)return;window._moreLoading=true;
         mw.style.display='none';
-        await ld(3);await ac();
+        loadedDays+=3;await ld(3);await ac();
         var rs2=rr.filter(function(r){return(r.assets&&r.assets.length)||(r.tag_name&&r.tag_name.indexOf('_meta.')>=0);});
         as=[];
         try{var _x=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifest.json',{headers:{Authorization:'Bearer '+T}});if(_x.ok){var _d=await _x.json();var _m=JSON.parse(atob(_d.content));for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
