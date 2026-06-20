@@ -708,9 +708,11 @@ async function lo(){
 
 
 
-    var pa=1,rr=[];window.ALLDONE=false;var MAXP=parseInt(new URL(location.href).searchParams.get('pages'))||3;
-    async function ld(){for(var i=0;i<MAXP;i++){if(window.ALLDONE)break;var r=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});if(!r.ok){window.ALLDONE=true;break;}var d=await r.json();if(!d.length){window.ALLDONE=true;break;}rr=rr.concat(d);pa++;}}
+    var pa=1,rr=[],loadedDays=parseInt(new URL(location.href).searchParams.get('days'))||3,shownDays=0;
+    async function ld(){for(var i=0;i<20;i++){var r=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});if(!r.ok)break;var d=await r.json();if(!d.length)break;rr=rr.concat(d);pa++;}}
     await ld();
+    var daySet={};rr.forEach(function(r){var d=(r.created_at||'').slice(0,10);if(d)daySet[d]=1;});var days=Object.keys(daySet).sort().reverse();shownDays=Math.min(loadedDays,days.length);var cutoff=days[shownDays-1]||'';
+    if(cutoff)rr=rr.filter(function(r){return(r.created_at||'').slice(0,10)>=cutoff;});
 
 
 
@@ -821,7 +823,7 @@ async function lo(){
 
 
 
-    bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='加载更多';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}
+    bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();if(days.length>shownDays){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var d=parseInt(new URL(location.href).searchParams.get('days'))||3;location.href='?days='+(d+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}if(!window.ALLDONE){var mb=document.createElement('button');mb.textContent='\u52a0\u8f7d\u66f4\u591a';mb.style.cssText='display:block;margin:24px auto;padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';mb.onclick=function(){var p=parseInt(new URL(location.href).searchParams.get('pages'))||3;location.href='?pages='+(p+3)};document.getElementById('ct').after(mb);}
 
 
 
