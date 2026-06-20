@@ -708,17 +708,18 @@ async function lo(){
 
 
 
-    var pa=1,rr=[],loadedDays=parseInt(new URL(location.href).searchParams.get('days'))||3,shownDays=0,allDaysLoaded=false;
+    var pa=1,rr=[],loadedDays=parseInt(new URL(location.href).searchParams.get('days'))||3;
+window._cutoff='';window._days=[];window._shownDays=0;
 async function ld(n){for(var i=0;i<(n||3);i++){var r=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});if(!r.ok)break;var d=await r.json();if(!d.length)break;rr=rr.concat(d);pa++;}}
-async function reCalc(){
+async function fd(){
   var ds={};rr.forEach(function(r){var d=(r.created_at||'').slice(0,10);if(d)ds[d]=1;});
   window._days=Object.keys(ds).sort().reverse();
   window._shownDays=Math.min(loadedDays,window._days.length);
   window._cutoff=window._days[window._shownDays-1]||'';
 }
-async function reloadAll(){
-  // keep all rr data
-  rs=rr.filter(function(r){return(r.assets&&r.assets.length)||(r.tag_name&&r.tag_name.indexOf('_meta.')>=0);});
+await ld(3);await fd();
+if(window._days.length<loadedDays)for(var t=0;t<5&&window._days.length<loadedDays;t++){await ld(3);await fd();}
+rs=rr.filter(function(r){return(r.assets&&r.assets.length)||(r.tag_name&&r.tag_name.indexOf('_meta.')>=0);});
   var nm={};rs.forEach(function(r){(r.body||'').split('\n').forEach(function(l){var i=l.indexOf('/');if(i>0&&i<l.length-1)nm[l.substring(i+1)]=l.substring(0,i)})});
   var mt={},mt_pv={},mt_tv={},mt_dt={};as=[];
   try{var _x=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifest.json',{headers:{Authorization:'Bearer '+T}});if(_x.ok){var _d=await _x.json();var _m=JSON.parse(atob(_d.content));for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
@@ -735,7 +736,8 @@ async function reloadAll(){
     try{var _mr=await fetch(mt[_mk]);if(_mr.ok){var _mc=await _mr.json();if(!mt_pv[_mk]&&_mc.peak_viewers!=null){mt_pv[_mk]=_mc.peak_viewers;var _rid=_mk.split('|')[0];if(_rid&&!mt_pv[_rid])mt_pv[_rid]=_mc.peak_viewers;}if(!mt_tv[_mk]&&_mc.total_user_str){mt_tv[_mk]=_mc.total_user_str;var _rid2=_mk.split('|')[0];if(_rid2&&!mt_tv[_rid2])mt_tv[_rid2]=_mc.total_user_str;}if(!mt_dt[_mk]&&_mc.device_type){mt_dt[_mk]=_mc.device_type;var _rid3=_mk.split('|')[0];if(_rid3&&!mt_dt[_rid3])mt_dt[_rid3]=_mc.device_type;}}}catch(_e){}
   }
   as=as.filter(function(a){var _d=a.st?a.st.slice(0,10).replace(/(\\d{4})(\\d{2})(\\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!_d||_d>=window._cutoff;});
-  bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
+  as=as.filter(function(a){var _d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!_d||_d>=window._cutoff;});
+bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
   var mw=document.getElementById('moreWrap');
   if(mw){
     var moreAvail=window._days.length>window._shownDays||!allDaysLoaded;
