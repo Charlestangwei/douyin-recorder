@@ -822,7 +822,7 @@ async function lo(){
 
 
 
-    if(window._cutoff)as=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!d||d>=window._cutoff;});
+    if(window._cutoff){var _b4=as.length;var _removed=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!(d&&d>=window._cutoff);});console.log('filter: removed '+_removed.length+' entries, total '+_b4+', cutoff '+window._cutoff);as=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!d||d>=window._cutoff;});}
     bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
     var grd=document.querySelector('.packages-grid');var mw=document.getElementById('moreWrap');
     if(mw&&grd){
