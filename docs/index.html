@@ -724,7 +724,7 @@ async function lo(){
 
 
 
-    try{var _r=await fetch('https://raw.githubusercontent.com/'+R+'/main/docs/manifest.json?_='+Date.now());if(_r.ok){var _m=JSON.parse(await _r.text());for(var _k in _m){var _e=_m[_k];console.log('manifest: processing',Object.keys(JSON.parse(JSON.stringify(_m))).length,'entries');if(_e.artifact_id){var _cnt=(window._mcnt||0)+1;window._mcnt=_cnt;console.log('manifest: push',_k,_e.artifact_id);as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
+    try{var _r=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifest.json',{headers:{Authorization:'Bearer '+T}});if(_r.ok){var _d=await _r.json();var _m=JSON.parse(atob(_d.content));for(var _k in _m){var _e=_m[_k];console.log('manifest: processing',Object.keys(JSON.parse(JSON.stringify(_m))).length,'entries');if(_e.artifact_id){var _cnt=(window._mcnt||0)+1;window._mcnt=_cnt;console.log('manifest: push',_k,_e.artifact_id);as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}
 
 
 
