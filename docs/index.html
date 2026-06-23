@@ -1178,6 +1178,9 @@ function pkPeakHtml(p){
 
 
 
+function dlAuth(u,fn){var x=new XMLHttpRequest();x.open('GET',u,true);x.setRequestHeader('Authorization','Bearer '+T);x.responseType='blob';x.onload=function(){var a=document.createElement('a');a.href=URL.createObjectURL(x.response);a.download=fn;a.click();};x.onerror=function(){st('Download failed')};x.send();}
+
+
 function od(an,pi){
 
 
@@ -1238,7 +1241,7 @@ function od(an,pi){
 
 
 
-      h+='<div class="fa"><a href="'+eh(a.u)+'" target="_blank">&#x2B07;</a>';
+      h+='<div class="fa">'+(a._aid?'<a href="#" onclick="dlAuth(\''+eh(a.u)+'\',\''+eh(a.n)+'\');return false;">&#x2B07;</a>':'<a href="'+eh(a.u)+'" target="_blank">&#x2B07;</a>');
 
 
 
