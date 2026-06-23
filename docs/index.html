@@ -1178,7 +1178,7 @@ function pkPeakHtml(p){
 
 
 
-function dlAuth(u,fn){var w=window.open('','_blank');if(!w)return st('Popup blocked!');w.document.write('<html><body><p>Loading download...</p></body></html>');st('Getting download link...');fetch(u,{headers:{Authorization:'Bearer '+T}}).then(function(r){if(r.ok){w.location.href=r.url;st('Download started');}else{w.close();st('HTTP '+r.status);}}).catch(function(e){w.close();st('Error:'+e.message);});}
+function dlAuth(u,fn){st('Getting download link...');fetch(u,{headers:{Authorization:'Bearer '+T}}).then(function(r){if(r.ok){window.open(r.url,'_blank');st('Download started');}else st('HTTP '+r.status);}).catch(function(e){st('Error:'+e.message);});}
 
 
 function od(an,pi){
