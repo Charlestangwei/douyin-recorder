@@ -1178,7 +1178,7 @@ function pkPeakHtml(p){
 
 
 
-function dlAuth(u,fn){var aid=u.match(/\/(\d+)\/zip$/);if(!aid)return st('Invalid URL');var cid='_runCache';var rc=window[cid]||{};if(rc[aid[1]]){window.open('https://github.com/'+R+'/actions/runs/'+rc[aid[1]],'_blank');st('Opening GitHub');return;}st('Looking up...');fetch(u.replace('/zip',''),{headers:{Authorization:'Bearer '+T}}).then(function(r){return r.json();}).then(function(d){if(d.workflow_run&&d.workflow_run.id){var rid=d.workflow_run.id;rc[aid[1]]=rid;window[cid]=rc;window.open('https://github.com/'+R+'/actions/runs/'+rid,'_blank');st('Opening GitHub');}else{st('Run not found');}}).catch(function(e){st('Lookup failed: '+e.message);});}
+function dlAuth(u,fn){st('Getting download link...');fetch(u,{headers:{Authorization:'Bearer '+T}}).then(function(r){if(r.ok){window.open(r.url,'_blank');st('Download started');}else{st('HTTP '+r.status);}}).catch(function(e){st('Error:'+e.message);});}
 
 
 function od(an,pi){
