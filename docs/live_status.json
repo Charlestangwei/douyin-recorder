@@ -37,7 +37,7 @@
   "91294923462": {
     "live": true,
     "recording": true,
-    "start_ts": 1782683650,
+    "start_ts": 1782683720,
     "name": "小铭在海外（天铭商贸）",
     "checked_at": 1782686199
   },
@@ -49,7 +49,7 @@
     "checked_at": 1782686199
   },
   "Cambon": {
-    "live": false,
+    "live": true,
     "recording": false,
     "start_ts": null,
     "name": "小明在美国",
