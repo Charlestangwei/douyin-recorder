@@ -2,7 +2,7 @@
   "0448VIP2021": {
     "live": true,
     "recording": true,
-    "start_ts": 1782781694,
+    "start_ts": 1782779663,
     "name": "三点钟在日本",
     "checked_at": 1782783607
   },
@@ -16,14 +16,14 @@
   "602968889604": {
     "live": true,
     "recording": true,
-    "start_ts": 1782781654,
+    "start_ts": 1782778966,
     "name": "小嘉在日生活",
     "checked_at": 1782783607
   },
   "765254970237": {
     "live": true,
     "recording": true,
-    "start_ts": 1782781670,
+    "start_ts": 1782781204,
     "name": "晓哥海外生活(樱桃)",
     "checked_at": 1782783607
   },
@@ -51,7 +51,7 @@
   "Cambon": {
     "live": true,
     "recording": true,
-    "start_ts": 1782783424,
+    "start_ts": 1782783415,
     "name": "小明在美国",
     "checked_at": 1782783607
   }
