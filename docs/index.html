@@ -709,7 +709,7 @@ async function lo(){
 
 
     var pa=1,rr=[],loadedDays=parseInt(new URL(location.href).searchParams.get('days'))||3;
-    async function ld(n){for(var i=0;i<(n||3);i++){var r=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});if(!r.ok)break;var d=await r.json();if(!d.length)break;rr=rr.concat(d);pa++;}}
+    async function ld(n){for(var i=0;i<(n||3);i++){var r=await fetch(A+'/repos/'+R+'/releases?per_page=100&page='+pa,{headers:hd});if(!r.ok){window._moreAvail=false;break;}var d=await r.json();if(!d.length){window._moreAvail=false;break;}rr=rr.concat(d);pa++;window._moreAvail=d.length==100;}}
     async function ac(){
       var ds={};rr.forEach(function(r){var d=(r.created_at||'').slice(0,10);if(d)ds[d]=1;});
       var dl=Object.keys(ds).sort().reverse(),sd=Math.min(loadedDays,dl.length);
@@ -826,7 +826,7 @@ try{var _r=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifes
     bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
     var grd=document.querySelector('.packages-grid');var mw=document.getElementById('moreWrap');
     if(mw&&grd){
-      var moreAvail=window._days&&window._days.length>window._shownDays;
+      var moreAvail=window._moreAvail;
       if(moreAvail){grd.after(mw);mw.style.display='block';}else{mw.style.display='none';}
       var abtn=document.getElementById('allBtn');if(abtn){abtn.onclick=async function(){try{window._moreLoading=true;mw.style.display='none';this.textContent='加载中...';this.disabled=true;while(window._days&&window._days.length>window._shownDays){loadedDays+=3;await ld(3);await ac();}var rs2=rr.filter(function(r){return(r.assets&&r.assets.length)||(r.tag_name&&r.tag_name.indexOf('_meta.')>=0);});as=[];try{var _x=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifest.json',{headers:{Authorization:'Bearer '+T}});if(_x.ok){var _d=await _x.json();var _m=JSON.parse(atob(_d.content));for(var _k in _m){var _e=_m[_k];if(_e.artifact_id){as.push({id:-1+as.length,n:_e.merged_file||(_k+'_merged.mkv'),z:0,u:A+'/repos/'+R+'/actions/artifacts/'+_e.artifact_id+'/zip',c:(_e.backup_date||'')+'T00:00:00Z',ty:'k',ri:_e.room||_k,an:gb(_e.room||_k)||'oth',st:_e.start_ts||'',et:null,_aid:_e.artifact_id,_exp:_e.expires||'?'})}}}}catch(ex){}rs2.forEach(function(r){r.assets.forEach(function(a){var t2=gt(a.name),p2=pfn(a.name),id2=p2?p2.id:null,an2=id2?gb(id2):null;if(!an2&&id2&&nm[a.name])an2=nm[a.name];if(!an2)an2=id2||'oth';if(t2!='x'){if(t2=='m'){}else as.push({id:a.id,n:a.name,z:a.size,u:a.browser_download_url,c:a.created_at||r.created_at,ty:t2,ri:id2,an:an2,st:p2?p2.s:null,et:p2?p2.e:null})};});});if(window._cutoff)as=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!d||d>=window._cutoff;});bp(mt,mt_pv,mt_tv,mt_dt);rrb();pf();mw.style.display='none';this.textContent='\u5df2\u52a0\u8f7d\u5168\u90e8';}catch(ae){console.log('all err',ae);window._moreLoading=false;}};}
     mw.onclick=async function(){try{
