@@ -159,7 +159,7 @@ class DanmakuCollector:
                     'browser_language': 'zh-CN', 'browser_platform': 'Win32',
                     'browser_name': 'Chrome', 'browser_version': '120.0.0.0',
                     'os_name': 'Windows', 'os_version': '10',
-                    'web_rid': self.room_id, 'room_id_str': _internal_rid,
+                    'web_rid': self.room_id,
                     'is_need_double_stream': 'false',
                 })
                 log(f"[PW] {self.anchor_name} API URL ready, {len(_cookies)} cookies")
@@ -269,7 +269,7 @@ class DanmakuCollector:
                                 })
                             # 2. stats.user_count (numeric, exact) - most precise from API
                             try:
-                                _nu = _dd.get('stats', {}).get('user_count')
+                                _nu = _dd.get('stats', {}).get('user_count_str')
                                 if _nu is not None:
                                     _http_vc = int(_nu)
                             except:
