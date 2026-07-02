@@ -660,7 +660,7 @@ function ft(s,e){var a=fl(ts(s));return e?a+' ~ '+fl(ts(e)):a}
 
 
 
-function gb(i){if(rm)for(var j=0;j<rm.length;j++)if(rm[j].id===i)return rm[j].name;return null}
+function gb(i){if(rm)for(var j=0;j<rm.length;j++)if(rm[j].id===i)return rm[j].name;if(i&&nm&&nm[i])return nm[i];return null}
 
 
 
