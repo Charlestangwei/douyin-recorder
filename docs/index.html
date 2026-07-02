@@ -715,7 +715,7 @@ async function lo(){
       var dl=Object.keys(ds).sort().reverse(),sd=Math.min(loadedDays,dl.length);
       window._days=dl;window._shownDays=sd;window._cutoff=dl[sd-1]||'';
     }
-    await ld(3);await ac();
+    await ld(6);await ac();
     if(window._days&&window._days.length<loadedDays)for(var t=0;t<5&&window._days.length<loadedDays;t++){await ld(3);await ac();}
 
 
