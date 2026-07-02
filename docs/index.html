@@ -765,6 +765,7 @@ try{var _r=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifes
 
 
 
+    try{var _seen={};as.forEach(function(a){var mk=a.ri+"|"+a.st;if(mk!="null|null"&&mk!="undefined|null")_seen[mk]=1;});rr.forEach(function(r){(r.assets||[]).forEach(function(a){var t=gt(a.name);if(t=="k"||t=="x"||t=="m")return;var p=pfn(a.name);if(!p||!p.id||!p.s)return;var mk=p.id+"|"+p.s;if(_seen[mk]&&!as.some(function(x){return x.id===a.id})){as.push({id:a.id,n:a.name,z:a.size,u:a.browser_download_url,c:a.created_at||r.created_at,ty:t,ri:p.id,an:gb(p.id)||p.id||"oth",st:p.s,et:p.e||null});}})});}catch(_se){}
     bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
     var grd=document.querySelector('.packages-grid');var mw=document.getElementById('moreWrap');
     if(mw&&grd){
