@@ -42,6 +42,19 @@ for k, v in local_entries.items():
 if merged_count > 0:
     log("Added " + str(merged_count) + " new entries from local manifest")
 
+# Load rooms.txt for anchor names
+room_names = {}
+try:
+    _r = urllib.request.Request(API + "/contents/rooms.txt", headers=HEADERS)
+    _d = json.loads(urllib.request.urlopen(_r, timeout=15).read())
+    for _l in base64.b64decode(_d["content"]).decode("utf-8").strip().split("\n"):
+        if "=" in _l:
+            _p = _l.split("=", 1)
+            room_names[_p[0].strip().lower()] = _p[1].strip()
+except:
+    pass
+log("Loaded " + str(len(room_names)) + " room names")
+
 # Step 4: Find all mkv-room artifacts and match/create
 try:
     url = API + "/actions/artifacts?per_page=100"
@@ -73,7 +86,8 @@ try:
             "backup_date": time.strftime("%Y-%m-%d"),
             "artifact_id": a["id"],
             "run_id": a["workflow_run"]["id"],
-            "expires": a.get("expires_at", "")
+            "expires": a.get("expires_at", ""),
+            "anchor_name": room_names.get(room.lower(), "")
         }
         
         if key in existing and existing[key].get("artifact_id") is None:
