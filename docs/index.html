@@ -765,59 +765,6 @@ try{var _r=await fetch('https://api.github.com/repos/'+R+'/contents/docs/manifes
 
 
 
-    for(var _mk in mt){
-
-      if(_mk.indexOf('|')<0)continue;
-
-      if(mt_pv[_mk]&&mt_tv[_mk])continue;
-
-      try{
-
-        var _mr=await fetch(mt[_mk]);
-
-        if(_mr.ok){
-
-          var _mc=await _mr.json();
-
-          if(!mt_pv[_mk]&&_mc.peak_viewers!=null){
-
-            mt_pv[_mk]=_mc.peak_viewers;
-
-            var _rid=_mk.split('|')[0];
-
-            if(_rid&&!mt_pv[_rid])mt_pv[_rid]=_mc.peak_viewers;
-
-          }
-
-          if(!mt_tv[_mk]&&_mc.total_user_str){
-
-            mt_tv[_mk]=_mc.total_user_str;
-
-            var _rid2=_mk.split('|')[0];
-
-            if(_rid2&&!mt_tv[_rid2])mt_tv[_rid2]=_mc.total_user_str;
-
-          }
-
-          if(!mt_dt[_mk]&&_mc.device_type){
-
-            mt_dt[_mk]=_mc.device_type;
-
-            var _rid3=_mk.split('|')[0];
-
-            if(_rid3&&!mt_dt[_rid3])mt_dt[_rid3]=_mc.device_type;
-
-          }
-
-        }
-
-      }catch(_e){}
-
-    }
-
-
-
-    if(window._cutoff){var _b4=as.length;var _removed=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!(d&&d>=window._cutoff);});console.log('filter: removed '+_removed.length+' entries, total '+_b4+', cutoff '+window._cutoff);console.log('filter: withAid='+as.filter(function(x){return x._aid;}).length);as=as.filter(function(a){var d=a.st?a.st.slice(0,10).replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3'):(a.c||'').slice(0,10);return!d||d>=window._cutoff;});try{var _seen={};as.forEach(function(a){var mk=a.ri+'|'+a.st;if(mk!='null|null'&&mk!='undefined|null')_seen[mk]=1;});rr.forEach(function(r){(r.assets||[]).forEach(function(a){var t=gt(a.name);if(t=='k'||t=='x'||t=='m')return;var p=pfn(a.name);if(!p||!p.id||!p.s)return;var mk=p.id+'|'+p.s;if(_seen[mk]&&!as.some(function(x){return x.id===a.id})){as.push({id:a.id,n:a.name,z:a.size,u:a.browser_download_url,c:a.created_at||r.created_at,ty:t,ri:p.id,an:gb(p.id)||p.id||'oth',st:p.s,et:p.e||null});}})});}catch(_se){}}
     bp(mt,mt_pv,mt_tv,mt_dt);rrb();ud();
     var grd=document.querySelector('.packages-grid');var mw=document.getElementById('moreWrap');
     if(mw&&grd){
