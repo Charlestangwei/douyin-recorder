@@ -28,9 +28,9 @@
     "checked_at": 1783118464
   },
   "88134012935": {
-    "live": false,
-    "recording": false,
-    "start_ts": null,
+    "live": true,
+    "recording": true,
+    "start_ts": 1783118440,
     "name": "小瑶一家在日本",
     "checked_at": 1783118464
   },
