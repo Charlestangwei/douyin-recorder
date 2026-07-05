@@ -2,14 +2,14 @@
   "0448VIP2021": {
     "live": true,
     "recording": true,
-    "start_ts": 1783213513,
+    "start_ts": 1783211391,
     "name": "三点钟在日本",
     "checked_at": 1783214367
   },
   "602968889604": {
     "live": true,
     "recording": true,
-    "start_ts": 1783213490,
+    "start_ts": 1783211976,
     "name": "小嘉在日生活",
     "checked_at": 1783214367
   },
@@ -44,7 +44,7 @@
   "961019695933": {
     "live": true,
     "recording": true,
-    "start_ts": 1783213536,
+    "start_ts": 1783211567,
     "name": "麻花在泰国",
     "checked_at": 1783214367
   }
