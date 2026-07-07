@@ -52,7 +52,7 @@ jobs:
           sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/azure-cli.list 2>/dev/null || true
           sudo apt-get update -qq
                     python -m pip install --upgrade pip
-          pip install --timeout 60 torch torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install --timeout 120 torch torchaudio --extra-index-url https://download.pytorch.org/whl/cpu --trusted-host download.pytorch.org --trusted-host download-r2.pytorch.org
           pip install --timeout 60 --force-reinstall funasr requests playwright
           mkdir -p /tmp/recordings /tmp/transcripts
       - name: Install Playwright browsers
