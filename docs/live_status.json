@@ -1,8 +1,8 @@
 {
   "0448VIP2021": {
-    "live": false,
-    "recording": false,
-    "start_ts": null,
+    "live": true,
+    "recording": true,
+    "start_ts": 1783469831,
     "name": "三点钟在日本",
     "checked_at": 1783469833
   },
