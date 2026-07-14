@@ -7,6 +7,8 @@ on:
       - 'docs/index.html'
       - 'docs/frontend_*.html'
       - 'docs/live_status_*.json'
+      - 'docs/merged.html'
+      - 'docs/manifest.json'
       - 'docs/transcripts.html'
       - 'docs/transcripts_index.json'
       - '.github/workflows/deploy-pages.yml'
