@@ -6624,5 +6624,29 @@
     "run_id": 29313391977,
     "expires": "2026-10-12T07:05:14Z",
     "anchor_name": "雨露海外生活"
+  },
+  "0448VIP2021_20260706_111621": {
+    "room": "0448VIP2021",
+    "date": "20260706",
+    "start_ts": "20260706_111621",
+    "merged_file": "0448VIP2021_20260706_111621_merged.mkv",
+    "segments": 0,
+    "backup_date": "2026-07-14",
+    "artifact_id": 8303137569,
+    "run_id": 29313391977,
+    "expires": "2026-10-12T07:05:14Z",
+    "anchor_name": ""
+  },
+  "0448VIP2021_20260706_112611": {
+    "room": "0448VIP2021",
+    "date": "20260706",
+    "start_ts": "20260706_112611",
+    "merged_file": "0448VIP2021_20260706_112611_merged.mkv",
+    "segments": 0,
+    "backup_date": "2026-07-14",
+    "artifact_id": 8303102765,
+    "run_id": 29313391977,
+    "expires": "2026-10-12T07:05:14Z",
+    "anchor_name": ""
   }
 }
