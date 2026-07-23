@@ -21,9 +21,9 @@
     "checked_at": 1784850705
   },
   "765254970237": {
-    "live": true,
-    "recording": true,
-    "start_ts": 1784850666,
+    "live": false,
+    "recording": false,
+    "start_ts": null,
     "name": "晓哥海外生活(樱桃)",
     "checked_at": 1784850705
   },
